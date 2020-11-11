@@ -872,6 +872,61 @@ public class Tools {
     }
 
 
+    public static  String readFromAssets(Context mContext,String path) {
+        InputStream inputStream = null;
+        StringBuilder sb = new StringBuilder("");
+        try {
+            //获得原文件流
+            inputStream = mContext.getAssets().open(path);
+            byte[] data = new byte[4096];
+            //输出流开始处理流
+            int byteCount = 0;
+            while ((byteCount=inputStream.read(data)) != -1) {
+                sb.append(new String(data, 0, byteCount));
+            }
+        }catch (Throwable e) {
+            return "";
+        }finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                    inputStream = null;
+                }catch (Throwable e) {}
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 从raw中读取txt
+     */
+    public static String readFromRaw(Context mContext,int res_id) {
+        InputStream inputStream = null;
+        StringBuilder sb = new StringBuilder("");
+        try {
+            //获得原文件流
+            inputStream = mContext.getResources().openRawResource(res_id);
+            byte[] data = new byte[4096];
+            //输出流开始处理流
+            int byteCount = 0;
+            while ((byteCount=inputStream.read(data)) != -1) {
+                sb.append(new String(data, 0, byteCount));
+            }
+        }catch (Throwable e) {
+            return "";
+        }finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                    inputStream = null;
+                }catch (Throwable e) {}
+            }
+        }
+        return sb.toString();
+    }
+
+
+
 
 
 }
