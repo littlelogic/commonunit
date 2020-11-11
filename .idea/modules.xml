@@ -7,7 +7,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/commonunit.iml" filepath="$PROJECT_DIR$/.idea/modules/commonunit.iml" group="commonunit" />
       <module fileurl="file://$PROJECT_DIR$/listview/listview.iml" filepath="$PROJECT_DIR$/listview/listview.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/main/main.iml" filepath="$PROJECT_DIR$/.idea/modules/main/main.iml" group="commonunit/main" />
-      <module fileurl="file://$PROJECT_DIR$/utils/utils.iml" filepath="$PROJECT_DIR$/utils/utils.iml" group="commonunit/utils" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/utils/utils.iml" filepath="$PROJECT_DIR$/.idea/modules/utils/utils.iml" group="commonunit/utils" />
     </modules>
   </component>
 </project>

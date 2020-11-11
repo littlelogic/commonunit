@@ -16,7 +16,6 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         ALog.i("wjw","--->"+ Tools.getVersion(this));
-        ///005e
     }
 
 

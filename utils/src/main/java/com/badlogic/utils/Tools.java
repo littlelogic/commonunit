@@ -56,7 +56,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
-import android.view.DisplayCutout;
+
 import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
 import androidx.core.app.ActivityCompat;
@@ -1270,7 +1270,7 @@ public class Tools {
         return statusBarHeight2;
     }
 
-    public static int getStatusBarHeight3(Activity hActivity) {  
+    public static int getStatusBarHeight3(Activity hActivity) {
         /**
          * 获取状态栏高度——方法3
          * 应用区的顶端位置即状态栏的高度
@@ -1301,7 +1301,7 @@ public class Tools {
      *
      * @return
      */
-    public static Boolean hasNotchInScreen(Activity activity) {
+    /*public static Boolean hasNotchInScreen(Activity activity) {
         // android  P 以上有标准 API 来判断是否有刘海屏
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -1334,7 +1334,7 @@ public class Tools {
             return null;
         }
         return false;
-    }
+    }*/
 
     /**
      * 判断vivo是否有刘海屏
