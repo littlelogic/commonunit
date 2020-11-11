@@ -1270,7 +1270,7 @@ public class Tools {
         return statusBarHeight2;
     }
 
-    public static int getStatusBarHeight3(Activity hActivity) {
+    public static int getStatusBarHeight3(Activity hActivity) {  
         /**
          * 获取状态栏高度——方法3
          * 应用区的顶端位置即状态栏的高度
