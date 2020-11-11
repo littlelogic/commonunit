@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion "27.0.3"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
     defaultConfig {
         applicationId "com.badlogic.ui"
-        minSdkVersion 26
-        targetSdkVersion 23
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
         multiDexEnabled = true
@@ -41,14 +41,14 @@ dependencies {
     })
     implementation 'com.android.support:recyclerview-v7:27.0.2'
 
-    compile 'com.android.support:support-annotations:27.1.1'
-    compile 'com.android.support:support-v4:27.1.1'
-    compile 'com.android.support:design:27.1.1'
-    compile 'com.android.support:appcompat-v7:26.0.0-alpha1'
+    implementation 'com.android.support:support-annotations:27.1.1'
+    implementation 'com.android.support:support-v4:27.1.1'
+    implementation 'com.android.support:design:27.1.1'
+    implementation 'com.android.support:appcompat-v7:26.0.0-alpha1'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     androidTestImplementation 'junit:junit:4.12'
 
-    compile 'com.android.support:multidex:1.0.0'
+    implementation 'com.android.support:multidex:1.0.0'
 
     implementation project(':utils')
 }

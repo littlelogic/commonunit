@@ -1,9 +1,12 @@
 package com.badlogic.utils;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
@@ -31,7 +34,10 @@ import android.graphics.drawable.shapes.RoundRectShape;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
 import android.os.Looper;
+import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.service.autofill.Transformation;
@@ -42,16 +48,31 @@ import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Display;
+import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
+import android.view.DisplayCutout;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.StringRes;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.PermissionChecker;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.text.DateFormat;
@@ -64,6 +85,13 @@ import java.util.regex.Pattern;
 
 public class Tools {
 
+
+    /**
+     *
+     * @param color
+     * @param radius
+     * @return
+     */
     public static Drawable getCornerDrawable(int color, int radius) {
         float[] outerR = new float[]{radius, radius, radius, radius, radius, radius, radius, radius};
         RoundRectShape rrShape = new RoundRectShape(outerR, null, null);
@@ -88,7 +116,14 @@ public class Tools {
         return bg;
     }
 
-
+    /**
+     *
+     * @param color
+     * @param radius
+     * @param widthStroke
+     * @param colorStroke
+     * @return
+     */
     public static Drawable getCornerDrawable(int color, int radius, int widthStroke, int colorStroke) {
         int colors[] = {color, color};
         GradientDrawable mGradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TL_BR, colors);
@@ -99,7 +134,36 @@ public class Tools {
         return mGradientDrawable;
     }
 
+    /**
+     *
+     * @param color
+     * @param radius -radii for each of the 4 corners. For each corner, the array
+     *      * contains 2 values, <code>[X_radius, Y_radius]</code>. The corners are
+     *      * ordered top-left, top-right, bottom-right, bottom-left.
+     * @param widthStroke
+     * @param colorStroke
+     * @return
+     */
+    public static Drawable getCornerDrawable(int color, float radius[], int widthStroke, int colorStroke) {
+        int colors[] = {color, color};
+        GradientDrawable mGradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TL_BR, colors);
+        mGradientDrawable.setShape(GradientDrawable.RECTANGLE);//
+        mGradientDrawable.setCornerRadii(radius);
+        mGradientDrawable.setStroke(widthStroke, colorStroke);
+        mGradientDrawable.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+        return mGradientDrawable;
+    }
 
+    /**
+     *
+     * @param color
+     * @param radius
+     * @param widthStroke
+     * @param colorStroke
+     * @param dashWidth
+     * @param dashGap
+     * @return
+     */
     public static Drawable getCornerDrawable(int color, int radius, int widthStroke, int colorStroke, float dashWidth, float dashGap) {
         int colors[] = {color, color};
         GradientDrawable mGradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TL_BR, colors);
@@ -109,6 +173,213 @@ public class Tools {
         return mGradientDrawable;
     }
 
+    ///=========================
+
+    public static Drawable getDrawableBgCompat(Context context, int id){
+        return ContextCompat.getDrawable(context, id);
+    }
+
+    public static Drawable getDrawableByCache(Context context, int id){
+        return ContextCompat.getDrawable(context, id);
+    }
+
+    public static Drawable getDrawableByNew(Context context, int id){
+        return ContextCompat.getDrawable(context,id).getConstantState().newDrawable().mutate();
+    }
+
+    public static Drawable getDrawableBgResId(Resources res, int id){
+        return res.getDrawable(id);
+    }
+
+    public static Drawable getDrawableOriginalBgResId(Resources res, int id){
+        return new BitmapDrawable(res,getBitmapOriginalBgResId(res,id));
+    }
+
+    public static Bitmap getBitmapOriginalBgResId(Resources res, int id){
+        Bitmap bm = null;
+        try {
+            final TypedValue value = new TypedValue();
+            final InputStream is = res.openRawResource(id, value);
+
+            bm = decodeResourceStream(res, value, is, null, null);
+            //--bm = BitmapFactory.decodeStream(is);
+            is.close();
+        } catch (IOException e) {
+            /*  do nothing.
+                If the exception happened on open, bm will be null.
+                If it happened on close, bm is still valid.
+            */
+        }
+        return bm;
+    }
+
+    public static Bitmap decodeResourceStream(Resources res, TypedValue value,
+                                              InputStream is, Rect pad, BitmapFactory.Options opts) {
+        if (opts == null) {
+            opts = new BitmapFactory.Options();
+        }
+
+        if (opts.inDensity == 0 && value != null) {
+            final int density = value.density;
+            if (density == TypedValue.DENSITY_DEFAULT) {
+                opts.inDensity = DisplayMetrics.DENSITY_DEFAULT;
+            } else if (density != TypedValue.DENSITY_NONE) {
+                opts.inDensity = density;
+            }
+        }
+
+        if (opts.inTargetDensity == 0 && res != null) {
+            opts.inTargetDensity = res.getDisplayMetrics().densityDpi;
+            opts.inDensity = opts.inTargetDensity;
+        }
+        ///----BitmapFactory.decodeResource(BaseApplication.getContext().getResources(), imgId);
+        return BitmapFactory.decodeStream(is, pad, opts);
+    }
+
+    public static Bitmap getBitmapFrom_AssetsFile(String path){
+        String newPath=path;
+        Bitmap image = null;
+        boolean mark=false;
+        try{
+            FileInputStream inStream = new FileInputStream(newPath);
+            image = BitmapFactory.decodeStream(inStream);
+            inStream.close();
+        }catch(FileNotFoundException e){
+            mark=true;
+            e.printStackTrace();
+        }catch (IOException e){
+            e.printStackTrace();
+        }catch (OutOfMemoryError  e) {
+            e.printStackTrace();
+        }
+        if(mark){
+
+        }
+        return image;
+    }
+
+    public static Bitmap getBitmapFrom_sd(String path){
+        try {
+            File mFile=new File(path);
+            //若该文件存在
+            if (mFile.exists()) {
+                Bitmap bitmap=BitmapFactory.decodeFile(path);
+                return bitmap;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static String getFileContent(File file) {
+        String content = "";
+        if (!file.isDirectory()) {  //检查此路径名的文件是否是一个目录(文件夹)
+            if (file.getName().endsWith("txt")) {//文件格式为""文件
+                try {
+                    InputStream instream = new FileInputStream(file);
+                    if (instream != null) {
+                        InputStreamReader inputreader
+                                = new InputStreamReader(instream, "UTF-8");
+                        BufferedReader buffreader = new BufferedReader(inputreader);
+                        String line = "";
+                        //分行读取
+                        while ((line = buffreader.readLine()) != null) {
+                            content += line + "\n";
+                        }
+                        instream.close();//关闭输入流
+                    }
+                } catch (java.io.FileNotFoundException e) {
+                    Log.d("TestFile", "The File doesn't not exist.");
+                } catch (IOException e) {
+                    Log.d("TestFile", e.getMessage());
+                }
+            }
+        }
+        return content;
+    }
+
+    public static String readFile(File srcFile) {
+        if (!srcFile.exists() || !srcFile.canRead()) {
+            return "";
+        }
+        FileInputStream inputStream = null;
+        StringBuilder sb = new StringBuilder("");
+        try {
+            //获得原文件流
+            inputStream = new FileInputStream(srcFile);
+            byte[] data = new byte[4096];
+            //输出流开始处理流
+            int byteCount = 0;
+            while ((byteCount=inputStream.read(data)) != -1) {
+                ALog.i(ALog.Tag2,"CopyAccoutFragment--getAccountData--byteCount->"+byteCount);
+                sb.append(new String(data, 0, byteCount));
+            }
+        }catch (Throwable e) {
+            return "";
+        }finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                    inputStream = null;
+                }catch (Throwable e) {}
+            }
+        }
+        return sb.toString();
+    }
+
+    public static  String readFromAssets(Context mContext,String path) {
+        InputStream inputStream = null;
+        StringBuilder sb = new StringBuilder("");
+        try {
+            //获得原文件流
+            inputStream = mContext.getAssets().open(path);
+            byte[] data = new byte[4096];
+            //输出流开始处理流
+            int byteCount = 0;
+            while ((byteCount=inputStream.read(data)) != -1) {
+                sb.append(new String(data, 0, byteCount));
+            }
+        }catch (Throwable e) {
+            return "";
+        }finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                    inputStream = null;
+                }catch (Throwable e) {}
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 从raw中读取txt
+     */
+    public static String readFromRaw(Context mContext,int res_id) {
+        InputStream inputStream = null;
+        StringBuilder sb = new StringBuilder("");
+        try {
+            //获得原文件流
+            inputStream = mContext.getResources().openRawResource(res_id);
+            byte[] data = new byte[4096];
+            //输出流开始处理流
+            int byteCount = 0;
+            while ((byteCount=inputStream.read(data)) != -1) {
+                sb.append(new String(data, 0, byteCount));
+            }
+        }catch (Throwable e) {
+            return "";
+        }finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                    inputStream = null;
+                }catch (Throwable e) {}
+            }
+        }
+        return sb.toString();
+    }
 
     ///=========================
 
@@ -120,7 +391,88 @@ public class Tools {
         Toast.makeText(context, pMsg, Toast.LENGTH_SHORT).show();
     }
 
+    ///=========================
 
+    public static boolean checkPermissionGranted(Context context, String permission) {
+        // Android 6.0 以前，全部默认授权
+        boolean result = true;
+        int targetSdkVersion = 21;
+        try {
+            final PackageInfo info = context.getPackageManager().getPackageInfo(
+                    context.getPackageName(), 0);
+            targetSdkVersion = info.applicationInfo.targetSdkVersion;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (targetSdkVersion >= Build.VERSION_CODES.M) {
+                // targetSdkVersion >= 23, 使用Context#checkSelfPermission
+                result = context.checkSelfPermission(permission)
+                        == PackageManager.PERMISSION_GRANTED;
+            } else {
+                // targetSdkVersion < 23, 需要使用 PermissionChecker
+                result = PermissionChecker.checkSelfPermission(context, permission)
+                        == PermissionChecker.PERMISSION_GRANTED;
+            }
+        }
+        return result;
+    }
+
+    public static void applyPermissionGranted(final Context context, final String tintStr, final String permission[]) {
+        new AlertDialog.Builder(context)
+                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // TODO: 2016/11/10 打开系统设置权限
+                        dialog.cancel();
+                        //请求权限
+                        try {
+                            ActivityCompat.requestPermissions((Activity) context, permission, 1);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                })
+                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                })
+                .setCancelable(false)
+                .setMessage(tintStr+"")
+                .show();
+    }
+
+    public static void appendLog(String file, String content) {
+        try {
+            File logFile = new File(file);
+            File logParentFile = new File(logFile.getParent());
+            if (!logParentFile.exists()) {
+                logParentFile.mkdirs();
+            }
+            logFile.createNewFile();
+            FileWriter fileWriter = new FileWriter(logFile, true);
+            fileWriter.append("\n");
+            fileWriter.append(content);
+            fileWriter.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    ///=========================
+
+    public static int[] getScreenSize(Context context) {
+        Resources resources = context.getResources();
+        DisplayMetrics dm = resources.getDisplayMetrics();
+        float density1 = dm.density;
+        int width = dm.widthPixels;
+        int height = dm.heightPixels;
+        return new int[]{width,height};
+    }
 
     /**
      * 判断是否有网络
@@ -149,28 +501,6 @@ public class Tools {
         return false;
     }
 
-//    /**
-//     * 发送文字通知
-//     *
-//     * @param context
-//     * @param Msg
-//     * @param Title
-//     * @param content
-//     * @param i
-//     */
-//    @SuppressWarnings("deprecation")
-//    public static void sendText(Context context, String Msg, String Title,
-//                                String content, Intent i) {
-//        NotificationManager mn = (NotificationManager) context
-//                .getSystemService(Context.NOTIFICATION_SERVICE);
-//        Notification notification = new Notification(R.drawable.icon,
-//                Msg, System.currentTimeMillis());
-//        notification.flags = Notification.FLAG_AUTO_CANCEL;
-//        PendingIntent contentIntent = PendingIntent.getActivity(context, 0, i,
-//                PendingIntent.FLAG_UPDATE_CURRENT);
-//        notification.setLatestEventInfo(context, Title, content, contentIntent);
-//        mn.notify(0, notification);
-//    }
 
     /**
      * 移除SharedPreference
@@ -343,29 +673,6 @@ public class Tools {
         }
     }
 
-    private static float sDensity = 0;
-
-    //    /**
-//     * DP转换为像素
-//     *
-//     * @param context
-//     * @param nDip
-//     * @return
-//     */
-    public static int dipToPixel(Context context, int nDip) {
-        if (sDensity == 0) {
-            final WindowManager wm = (WindowManager) context
-                    .getSystemService(Context.WINDOW_SERVICE);
-            DisplayMetrics dm = new DisplayMetrics();
-            wm.getDefaultDisplay().getMetrics(dm);
-            sDensity = dm.density;
-        }
-        return (int) (sDensity * nDip);
-    }
-
-//    public static int dip2px(Context context, int nDip) {
-//        return dipToPixel(context, nDip);
-//    }
 
     public static int dip2px(Context context, float dipValue) {
         final float scale = context.getResources().getDisplayMetrics().density;
@@ -735,9 +1042,61 @@ public class Tools {
     }
 
     //================================================
-    public static Drawable getDrawableOriginalBgResId(Resources res, int id){
-        return new BitmapDrawable(res,getBitmapOriginalBgResId(res,id));
+
+    private static int calculateInSampleSize(BitmapFactory.Options options,
+                                             int reqWidth, int reqHeight) {
+        // 源图片的高度和宽度
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+        if (height > reqHeight || width > reqWidth) {
+            // 计算出实际宽高和目标宽高的比率
+            final int heightRatio = Math.round((float) height / (float) reqHeight);
+            final int widthRatio = Math.round((float) width / (float) reqWidth);
+            // 选择宽和高中最小的比率作为inSampleSize的值，这样可以保证最终图片的宽和高
+            // 一定都会大于等于目标的宽和高。
+            inSampleSize = heightRatio < widthRatio ? heightRatio : widthRatio;
+        }
+        return inSampleSize;
     }
+
+    public static Bitmap getBitmapFrom_sd_JustSize(String path){
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(path,options);
+        final int width_origi = options.outWidth;
+        final int height_origi = options.outHeight;
+        int width_new,height_new;
+        if (width_origi > height_origi) {
+            height_new = height_origi;
+            if (height_origi > 1080) {
+                height_new = 1080;
+            }
+            width_new = (int)(height_new * (width_origi/(float)height_origi));
+            if (width_new > 1920) {
+                width_new = 1920;
+                height_new = (int)(width_new * (height_origi/(float)width_origi));
+            }
+        } else {
+            width_new = width_origi;
+            if (width_new > 1080) {
+                width_new = 1080;
+            }
+            height_new = (int)(width_new * (height_origi/(float)width_origi));
+            if (height_new > 1920) {
+                height_new = 1920;
+                width_new = (int)(height_new * (width_origi/(float)height_origi));
+            }
+        }
+        // 调用上面定义的方法计算inSampleSize值
+        options.inSampleSize = calculateInSampleSize(options, width_new, height_new);
+        // 使用获取到的inSampleSize值再次解析图片
+        options.inJustDecodeBounds = false;
+        Bitmap srcBmp = BitmapFactory.decodeFile(path,options);
+        return srcBmp;
+    }
+
+    //================================================
 
     public static Bitmap getBitmapOriginalBgResId_b(Resources res, int id){
         return BitmapFactory.decodeResource(res, id);
@@ -755,7 +1114,17 @@ public class Tools {
         return bitmap;
     }
 
-    public static Bitmap getBitmapOriginalBgResId(Resources res, int id){
+    public static String readStrById(Context hContext,@StringRes int resId) {
+        String result = "";
+        try{
+            result = hContext.getResources().getString(resId);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    /*public static Bitmap getBitmapOriginalBgResId(Resources res, int id){
         Bitmap bm = null;
         try {
             final TypedValue value = new TypedValue();
@@ -765,15 +1134,15 @@ public class Tools {
             //--bm = BitmapFactory.decodeStream(is);
             is.close();
         } catch (java.io.IOException e) {
-            /*  do nothing.
+            *//*  do nothing.
                 If the exception happened on open, bm will be null.
                 If it happened on close, bm is still valid.
-            */
+            *//*
         }
         return bm;
-    }
+    }*/
 
-    public static Bitmap decodeResourceStream(Resources res, TypedValue value,
+    /*public static Bitmap decodeResourceStream(Resources res, TypedValue value,
                                               InputStream is, Rect pad, BitmapFactory.Options opts) {
         if (opts == null) {
             opts = new BitmapFactory.Options();
@@ -794,7 +1163,7 @@ public class Tools {
         }
         ///----BitmapFactory.decodeResource(BaseApplication.getContext().getResources(), imgId);
         return BitmapFactory.decodeStream(is, pad, opts);
-    }
+    }*/
 
 
     // 获取照片的mine_type
@@ -872,57 +1241,183 @@ public class Tools {
     }
 
 
-    public static  String readFromAssets(Context mContext,String path) {
-        InputStream inputStream = null;
-        StringBuilder sb = new StringBuilder("");
+    public static int getStatusBarHeight1(Context hContext) {
+        int statusBarHeight1 = -1;
         try {
-            //获得原文件流
-            inputStream = mContext.getAssets().open(path);
-            byte[] data = new byte[4096];
-            //输出流开始处理流
-            int byteCount = 0;
-            while ((byteCount=inputStream.read(data)) != -1) {
-                sb.append(new String(data, 0, byteCount));
+            //获取status_bar_height资源的ID
+            int resourceId = hContext.getResources().getIdentifier("status_bar_height", "dimen", "android");
+            if (resourceId > 0) {
+                //根据资源ID获取响应的尺寸值
+                statusBarHeight1 = hContext.getResources().getDimensionPixelSize(resourceId);
             }
-        }catch (Throwable e) {
-            return "";
-        }finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                    inputStream = null;
-                }catch (Throwable e) {}
-            }
+        } catch (Resources.NotFoundException e) {
+            e.printStackTrace();
         }
-        return sb.toString();
+        return statusBarHeight1;
+    }
+
+    public static int getStatusBarHeight2(Context hContext) {
+        int statusBarHeight2 = -1;
+        try {
+            Class<?> clazz = Class.forName("com.android.internal.R$dimen");
+            Object object = clazz.newInstance();
+            int height = Integer.parseInt(clazz.getField("status_bar_height")
+                    .get(object).toString());
+            statusBarHeight2 = hContext.getResources().getDimensionPixelSize(height);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return statusBarHeight2;
+    }
+
+    public static int getStatusBarHeight3(Activity hActivity) {
+        /**
+         * 获取状态栏高度——方法3
+         * 应用区的顶端位置即状态栏的高度
+         * *注意*该方法不能在初始化的时候用
+         * */
+        try {
+            Rect rectangle= new Rect();
+            hActivity.getWindow().getDecorView().getWindowVisibleDisplayFrame(rectangle);
+            return rectangle.top;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public static int getScreenRotationAngle(Context context) {
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        if (wm == null) {
+            return Surface.ROTATION_0;
+        }
+
+        Display display = wm.getDefaultDisplay();
+        return display.getRotation();
     }
 
     /**
-     * 从raw中读取txt
+     * 是否有刘海屏
+     *
+     * @return
      */
-    public static String readFromRaw(Context mContext,int res_id) {
-        InputStream inputStream = null;
-        StringBuilder sb = new StringBuilder("");
+    public static Boolean hasNotchInScreen(Activity activity) {
+        // android  P 以上有标准 API 来判断是否有刘海屏
         try {
-            //获得原文件流
-            inputStream = mContext.getResources().openRawResource(res_id);
-            byte[] data = new byte[4096];
-            //输出流开始处理流
-            int byteCount = 0;
-            while ((byteCount=inputStream.read(data)) != -1) {
-                sb.append(new String(data, 0, byteCount));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                DisplayCutout displayCutout = activity.getWindow().getDecorView().getRootWindowInsets().getDisplayCutout();
+                if (displayCutout != null) {
+                    // 说明有刘海屏
+                    return true;
+                }
+            } else {
+                // 通过其他方式判断是否有刘海屏  目前官方提供有开发文档的就 小米，vivo，华为（荣耀），oppo
+                String manufacturer = Build.MANUFACTURER;
+
+                if (manufacturer == null || manufacturer.equals("")) {
+                    return false;
+                } else if (manufacturer.equalsIgnoreCase("HUAWEI")) {
+                    return hasNotchHw(activity);
+                } else if (manufacturer.equalsIgnoreCase("xiaomi")) {
+                    return hasNotchXiaoMi(activity);
+                } else if (manufacturer.equalsIgnoreCase("oppo")) {
+                    return hasNotchOPPO(activity);
+                } else if (manufacturer.equalsIgnoreCase("vivo")) {
+                    return hasNotchVIVO(activity);
+                } else {
+                    return false;
+                }
             }
-        }catch (Throwable e) {
-            return "";
-        }finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                    inputStream = null;
-                }catch (Throwable e) {}
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            ALog.i("Tools-hasNotchInScreen-Exception->"+e.toString());
+            return null;
         }
-        return sb.toString();
+        return false;
+    }
+
+    /**
+     * 判断vivo是否有刘海屏
+     * https://swsdl.vivo.com.cn/appstore/developer/uploadfile/20180328/20180328152252602.pdf
+     *
+     * @param activity
+     * @return
+     */
+    private static boolean hasNotchVIVO(Activity activity) {
+        try {
+            Class<?> c = Class.forName("android.util.FtFeature");
+            Method get = c.getMethod("isFeatureSupport", int.class);
+            return (boolean) (get.invoke(c, 0x20));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * 判断oppo是否有刘海屏
+     * https://open.oppomobile.com/wiki/doc#id=10159
+     *
+     * @param activity
+     * @return
+     */
+    private static boolean hasNotchOPPO(Activity activity) {
+        return activity.getPackageManager().hasSystemFeature("com.oppo.feature.screen.heteromorphism");
+    }
+
+    /**
+     * 判断xiaomi是否有刘海屏
+     * https://dev.mi.com/console/doc/detail?pId=1293
+     *
+     * @param activity
+     * @return
+     */
+    private static boolean hasNotchXiaoMi(Activity activity) {
+        try {
+            Class<?> c = Class.forName("android.os.SystemProperties");
+            Method get = c.getMethod("getInt", String.class, int.class);
+            return (int) (get.invoke(c, "ro.miui.notch", 0)) == 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * 判断华为是否有刘海屏
+     * https://devcenter-test.huawei.com/consumer/cn/devservice/doc/50114
+     *
+     * @param activity
+     * @return
+     */
+    private static boolean hasNotchHw(Activity activity) {
+
+        try {
+            ClassLoader cl = activity.getClassLoader();
+            Class HwNotchSizeUtil = cl.loadClass("com.huawei.android.util.HwNotchSizeUtil");
+            Method get = HwNotchSizeUtil.getMethod("hasNotchInScreen");
+            return (boolean) get.invoke(HwNotchSizeUtil);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    private static long getExternalAvailableSpaceInBytes() {
+        long availableSpace = -1L;
+        try {
+            StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
+            availableSpace = (long) stat.getAvailableBlocksLong() * (long) stat.getBlockSizeLong();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return availableSpace;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    public static boolean isEnoughSpaceToDownload() {
+        return getExternalAvailableSpaceInBytes() > 100 * 1024 * 1024;
     }
 
 
