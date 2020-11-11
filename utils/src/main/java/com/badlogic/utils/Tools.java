@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
+import android.app.Application;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -812,6 +813,25 @@ public class Tools {
             return isDebugable;
         }
     }
+
+    public static boolean isApkDebugable() {
+        if (mApplication == null) {
+            return false;
+        }
+        return isApkDebugable(mApplication.getBaseContext());
+    }
+
+    private static Application mApplication;
+
+    public static void  setApplication(Application hApplication_){
+        mApplication = hApplication_;
+    }
+
+    public static Application  getApplication(){
+        return mApplication ;
+    }
+
+    ///==========================
 
 
     private static final int HORIZONTAL_ALIGN_LEFT = 1;
