@@ -50,6 +50,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Display;
+import android.view.DisplayCutout;
 import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
@@ -1321,7 +1322,7 @@ public class Tools {
      *
      * @return
      */
-    /*public static Boolean hasNotchInScreen(Activity activity) {
+    public static Boolean hasNotchInScreen(Activity activity) {
         // android  P 以上有标准 API 来判断是否有刘海屏
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -1354,7 +1355,7 @@ public class Tools {
             return null;
         }
         return false;
-    }*/
+    }
 
     /**
      * 判断vivo是否有刘海屏
