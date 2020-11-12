@@ -5,9 +5,11 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Application;
+import android.app.Service;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
@@ -20,7 +22,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
@@ -32,6 +36,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.graphics.drawable.shapes.RoundRectShape;
+import android.media.MediaMetadataRetriever;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -39,6 +44,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.Looper;
 import android.os.StatFs;
+import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.service.autofill.Transformation;
@@ -53,6 +59,8 @@ import android.view.Display;
 import android.view.DisplayCutout;
 import android.view.Surface;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -70,16 +78,24 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -385,6 +401,50 @@ public class Tools {
 
     ///=========================
 
+    public static int getAndroidSDK_INT(){
+        ///-android.os.Build.VERSION_CODES.O;
+        return  android.os.Build.VERSION.SDK_INT;
+    }
+
+   ///=========================
+
+    public static void printIntArray(int[] array){
+        if (array == null) {
+            System.out.print("{}");
+            return;
+        }
+        for (int i = 0; i < array.length; i++ ) {
+            if (i == 0) {
+                System.out.print("{ ");
+            }
+            if (i == array.length - 1) {
+                System.out.print(array[i]);
+                System.out.print(" }");
+            } else {
+                System.out.print(array[i] + ",");
+            }
+        }
+        System.out.println();
+    }
+
+    public static void printIntArray(ArrayList<Integer> list){
+        if (list == null) {
+            System.out.print("{}");
+            return;
+        }
+        for (int i = 0; i < list.size(); i++ ) {
+            if (i == 0) {
+                System.out.print("{ ");
+            }
+            if (i == list.size() - 1) {
+                System.out.print(list.get(i));
+                System.out.print(" }");
+            } else {
+                System.out.print(list.get(i) + ",");
+            }
+        }
+    }
+
     public static void showLongToast(Context context, String pMsg) {
         Toast.makeText(context, pMsg, Toast.LENGTH_LONG).show();
     }
@@ -393,7 +453,248 @@ public class Tools {
         Toast.makeText(context, pMsg, Toast.LENGTH_SHORT).show();
     }
 
-    ///=========================
+    private static Vibrator vibrator;
+
+    /**
+     * 震动
+     */
+    public static void vibrate(Context hContext) {
+        try {
+            if(vibrator == null) {
+                vibrator = (Vibrator) hContext.getSystemService(Service.VIBRATOR_SERVICE);
+            }
+            vibrator.vibrate(16);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void vibrate(Context hContext,long milliseconds) {
+        try {
+            if(vibrator == null) {
+                vibrator = (Vibrator) hContext.getSystemService(Service.VIBRATOR_SERVICE);
+            }
+            vibrator.vibrate(milliseconds);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public int  getTargetSdkVersion(Context mContext){
+        final int targetSdkVersion = mContext.getApplicationInfo().targetSdkVersion;
+        return targetSdkVersion;
+    }
+
+    public static int packageCode(Context context) {
+        PackageManager manager = context.getPackageManager();
+        int code = 0;
+        try {
+            PackageInfo info = manager.getPackageInfo(context.getPackageName(), 0);
+            code = info.versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return code;
+    }
+
+    public static String packageName(Context context) {
+        PackageManager manager = context.getPackageManager();
+        String name = null;
+        try {
+            PackageInfo info = manager.getPackageInfo(context.getPackageName(), 0);
+            name = info.versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return name;
+    }
+
+
+    public static String getRuntimeClassName() {
+        try {
+            // 获得当前类名
+            String clazz = Thread.currentThread() .getStackTrace()[1].getClassName();
+            return clazz;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "error";
+    }
+
+    public static String getRuntimeMethodName() {
+        try {
+            // 获得当前方法名
+            ///String method = Thread.currentThread() .getStackTrace()[1].getMethodName();
+            String method = Thread.currentThread() .getStackTrace()[2+1].getMethodName();
+            return method;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "error";
+    }
+
+    public static String getRuntimeCallMethodName() {
+        try {
+            // 获得当前方法名
+            ////String method = Thread.currentThread() .getStackTrace()[2].getMethodName();
+            String method = Thread.currentThread() .getStackTrace()[2+2].getMethodName();
+            return method;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "error";
+    }
+
+    public static boolean checkAppInstalled(Context context, String pkgName) {
+        if (pkgName== null || pkgName.isEmpty()) {
+            return false;
+        }
+        final PackageManager packageManager = context.getPackageManager();
+        List<PackageInfo> info = packageManager.getInstalledPackages(0);
+        if(info == null || info.isEmpty())
+            return false;
+        for ( int i = 0; i < info.size(); i++ ) {
+            if(pkgName.equals(info.get(i).packageName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void openBrowser(Context context, String url){
+        Intent intent= new Intent();
+        intent.setAction("android.intent.action.VIEW");
+        Uri content_url = Uri.parse(url);
+        intent.setData(content_url);
+//        intent.setClassName("com.android.browser", "com.android.browser.BrowserActivity");
+        context.startActivity(intent);
+    }
+    //=================================================================================
+
+    public static boolean isChinese(char c) {
+        return isChineseByBlock(c);
+        /*Character.UnicodeBlock ub = Character.UnicodeBlock.of(c);
+        if (ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+             || ub == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS
+             || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
+
+             || ub == Character.UnicodeBlock.GENERAL_PUNCTUATION
+             || ub == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
+             || ub == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS) {
+            return true;
+        }
+        return false;*/
+    }
+
+    public static boolean check_AZaz09_(String s) {
+        String regEx = "^[A-Za-z0-9_]+$";
+        return s.matches(regEx);
+    }
+
+    public static boolean have09(String s) {
+        String regEx = "^[0-9]+$";
+        return s.matches(regEx);
+    }
+    public static boolean haveAZaz(String s) {
+        String regEx = "^[A-Za-z]+$";
+        return s.matches(regEx);
+    }
+
+    public static boolean checkAZaz09(String s) {
+        String regEx = "^[A-Za-z0-9]+$";
+        return s.matches(regEx);
+    }
+
+    public static boolean check_af_x_09(String s) {
+        String regEx = "^[a-f0-9]+$";
+        return s.matches(regEx);
+    }
+
+    public static boolean check09doc(String s) {
+        String regEx = "^[0-9.]+$";
+        return s.matches(regEx);
+    }
+
+    //------------------------------------------------------------------------------------
+
+    //使用UnicodeBlock方法判断
+    public static boolean isChineseByBlock(char c) {
+        Character.UnicodeBlock ub = Character.UnicodeBlock.of(c);
+        if (ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+                || ub == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS
+                || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
+                || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B
+                || ub == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS_SUPPLEMENT) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // 根据UnicodeBlock方法判断中文标点符号
+    public static boolean isChinesePunctuation(char c) {
+        Character.UnicodeBlock ub = Character.UnicodeBlock.of(c);
+        if (ub == Character.UnicodeBlock.GENERAL_PUNCTUATION
+                || ub == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
+                || ub == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS
+                || ub == Character.UnicodeBlock.CJK_COMPATIBILITY_FORMS) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    //=================================================================================
+
+    public static void measureView(View child) {
+        ViewGroup.LayoutParams mLayoutParams = child.getLayoutParams();
+        if (mLayoutParams == null) {
+            mLayoutParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+        int childWidthSpec = ViewGroup.getChildMeasureSpec(0, 0 + 0, mLayoutParams.width);
+        int lpHeight = mLayoutParams.height;
+        int childHeightSpec;
+        if (lpHeight > 0) {
+            childHeightSpec = View.MeasureSpec.makeMeasureSpec(lpHeight, View.MeasureSpec.EXACTLY);
+        } else {
+            childHeightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+        }
+        child.measure(childWidthSpec, childHeightSpec);
+    }
+
+    //网络连接是否好用
+    public static boolean isNetworkConnected(Context context){
+        ConnectivityManager cm = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo network = cm.getActiveNetworkInfo();
+        if(network != null){
+            return network.isAvailable();
+        }
+        return false;
+    }
+
+    public static enum NetWorkStateValue {
+        NETWORK_NONE ,
+        NETWORK_MOBILE,
+        NETWORK_WIFI
+    }
+
+    public static NetWorkStateValue getNetWorkState(Context context) {
+        // 得到连接管理器对象
+        ConnectivityManager connectivityManager = (ConnectivityManager) context
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager
+                .getActiveNetworkInfo();
+        if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
+            if (activeNetworkInfo.getType() == (ConnectivityManager.TYPE_WIFI)) {
+                return NetWorkStateValue.NETWORK_WIFI;
+            } else if (activeNetworkInfo.getType() == (ConnectivityManager.TYPE_MOBILE)) {
+                return NetWorkStateValue.NETWORK_MOBILE;
+            }
+        } else {
+            return NetWorkStateValue.NETWORK_NONE;
+        }
+        return NetWorkStateValue.NETWORK_NONE;
+    }
 
     public static boolean checkPermissionGranted(Context context, String permission) {
         // Android 6.0 以前，全部默认授权
@@ -463,6 +764,81 @@ public class Tools {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void writeTextToFile(final File file,final String log) {
+        if (file == null || !file.exists()) {
+            return;
+        }
+
+        boolean bSuccess = false;
+        try {
+            FileWriter writer = new FileWriter(file, false);
+            writer.write(log);
+            writer.close();
+            bSuccess = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            if(!bSuccess){
+                writeSDFile(file,log);
+            }
+        }
+    }
+
+    public static void writeSDFile(File file, String content) {
+        FileOutputStream fos;
+        try {
+            fos = new FileOutputStream(file);
+            byte[] bytes = content.getBytes();
+            fos.write(bytes);
+            fos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String getMD5ByPath(String path) {
+        BigInteger bi = null;
+        try {
+            byte[] buffer = new byte[8192];
+            int len = 0;
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            File f = new File(path);
+            FileInputStream fis = new FileInputStream(f);
+            while ((len = fis.read(buffer)) != -1) {
+                md.update(buffer, 0, len);
+            }
+            fis.close();
+            byte[] b = md.digest();
+            bi = new BigInteger(1, b);
+            return bi.toString(16);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "-1";
+    }
+
+    public static String getMD5ByInputStream(InputStream in) {
+        BigInteger bi = null;
+        try {
+            byte[] buffer = new byte[8192];
+            int len = 0;
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            while ((len = in.read(buffer)) != -1) {
+                md.update(buffer, 0, len);
+            }
+            in.close();
+            byte[] b = md.digest();
+            bi = new BigInteger(1, b);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return bi.toString(16);
     }
 
     ///=========================
@@ -692,6 +1068,64 @@ public class Tools {
         return rect.width();
     }
 
+    public static String date2TimeStamp(long time,String format){
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat(format);
+            String dateString = sdf.format(time);
+            return dateString;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    public static String handleDate(long time){
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = new Date(time);
+        Date old = null;
+        Date now = null;
+
+        try {
+            old = sdf.parse(sdf.format(date));
+            now = sdf.parse(sdf.format(new Date()));
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        long oldTime = old.getTime();
+        long nowTime = now.getTime();
+
+        long day = (nowTime - oldTime) / (24 * 60 * 60 * 1000);
+
+        if (day < 1) {  //今天
+            SimpleDateFormat format = new SimpleDateFormat("HH:mm");
+            return format.format(date);
+        } else if (isThisMonth(time)) {   //是本月
+            SimpleDateFormat format = new SimpleDateFormat("MM.dd");
+            return  format.format(date);
+        } else {    //可依次类推
+            SimpleDateFormat format = new SimpleDateFormat("yyyy.MM");
+            return format.format(date);
+        }
+    }
+    //判断选择的日期是否是本月
+    public static boolean isThisMonth(long time) {
+        return isThisTime(time, "yyyy-MM");
+    }
+
+    public static boolean isThisTime(long time, String pattern) {
+        Date date = new Date(time);
+        SimpleDateFormat sdf = new SimpleDateFormat(pattern);
+        String param = sdf.format(date);//参数时间
+        String now = sdf.format(new Date());//当前时间
+        if (param.equals(now)) {
+            return true;
+        }
+        return false;
+    }
+
+
+
     /**
      * 得到TextView设置此字号的高度
      *
@@ -762,6 +1196,126 @@ public class Tools {
         return Mark;
     }
 
+    public static String getCurProcessName(Context context) {
+        int pid = android.os.Process.myPid();
+        ActivityManager mActivityManager = (ActivityManager) context
+                .getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningAppProcessInfo appProcess : mActivityManager
+                .getRunningAppProcesses()) {
+            if (appProcess.pid == pid) {
+                return appProcess.processName;
+            }
+        }
+        return "";
+    }
+
+    public static String getModifyTime(File file) throws FileNotFoundException {
+        String modify_time = "";
+        try {
+            modify_time = file.lastModified() + "";
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return modify_time;
+    }
+
+    public static String getMd5ByFile(File file) throws FileNotFoundException {
+        String value = null;
+        FileInputStream in = new FileInputStream(file);
+        try {
+            MappedByteBuffer byteBuffer = in.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, file.length());
+            MessageDigest md5 = MessageDigest.getInstance("MD5");
+            md5.update(byteBuffer);
+            BigInteger bi = new BigInteger(1, md5.digest());
+            value = bi.toString(16);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if(null != in) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return value;
+    }
+
+
+    public static boolean copyAssetsToSdCard(AssetManager assetManager, String assetsPath, String sdcardPath){
+        boolean b = false;
+        InputStream in;
+        OutputStream out;
+        try {
+            in = assetManager.open(assetsPath);
+            if (in != null) {
+                String newFileName = sdcardPath;
+                out = new FileOutputStream(newFileName);
+                if (out != null) {
+                    byte[] buffer = new byte[1024];
+                    int read;
+                    while ((read = in.read(buffer)) != -1) {
+                        out.write(buffer, 0, read);
+                    }
+                    in.close();
+                    out.flush();
+                    out.close();
+                    b = true;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return b;
+    }
+
+    public static void getMediaInfor(String mUri) {
+        if (mUri != null && !mUri.equals("")) {
+        } else {
+            return;
+        }
+        android.media.MediaMetadataRetriever mmr = new android.media.MediaMetadataRetriever();
+        long duration;
+        try {
+            mmr.setDataSource(mUri);
+            duration = Long.parseLong(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+            int width = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+            int height = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+            if (width == 0 || height == 0) {
+                duration = 0;
+            }
+        } catch (Exception ex) {
+            ALog.i("LightVideoHelper","Exception:" + ex);
+        } finally {
+            mmr.release();
+        }
+        return ;
+    }
+
+    public static long getMediaDuring(String mUri) {
+        if (mUri != null && !mUri.equals("")) {
+        } else {
+            return 0;
+        }
+        android.media.MediaMetadataRetriever mmr = new android.media.MediaMetadataRetriever();
+        long duration = 0;
+        try {
+            mmr.setDataSource(mUri);
+            duration = Long.parseLong(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+            ///int width = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+            //int height = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+            /*if (width == 0 || height == 0) {
+                duration = 0;
+            }*/
+        } catch (Exception ex) {
+            ALog.i("LightVideoHelper","Exception:" + ex);
+        } finally {
+            mmr.release();
+        }
+        return duration;
+    }
 
     /**
      * 判断某个服务是否正在运行的方法
@@ -1063,6 +1617,22 @@ public class Tools {
     }
 
     //================================================
+
+    public static void removeGlobalOnLayoutListener(ViewTreeObserver mViewTreeObserver, ViewTreeObserver.OnGlobalLayoutListener listener) {
+        try {
+            if (mViewTreeObserver == null || listener == null) {
+                return;
+            }
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                mViewTreeObserver.removeGlobalOnLayoutListener(listener);
+            } else {
+                mViewTreeObserver.removeOnGlobalLayoutListener(listener);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private static int calculateInSampleSize(BitmapFactory.Options options,
                                              int reqWidth, int reqHeight) {
@@ -1442,7 +2012,343 @@ public class Tools {
     }
 
 
+    //================================
 
+    // 点到直线的最短距离的判断 点（x0,y0） 到由两点组成的线段（x1,y1） ,( x2,y2 )
+    public static double pointToLine(double x1, double y1, double x2, double y2, double x0, double y0) {
+        double space = 0;
+        double a, b, c;
+        a = lineSpace(x1, y1, x2, y2);// 线段的长度
+        b = lineSpace(x1, y1, x0, y0);// (x1,y1)到点的距离
+        c = lineSpace(x2, y2, x0, y0);// (x2,y2)到点的距离
+        if (c+b == a) {//点在线段上
+            space = 0;
+            return space;
+        }
+        if (a <= 0.000001) {//不是线段，是一个点
+            space = b;
+            return space;
+        }
+        if (c * c >= a * a + b * b) { //组成直角三角形或钝角三角形，(x1,y1)为直角或钝角
+            System.out.println("组成直角三角形或钝角三角形，(x1,y1)为直角或钝角  ");
+            space = b;
+            return space;
+        }
+        if (b * b >= a * a + c * c) {//组成直角三角形或钝角三角形，(x2,y2)为直角或钝角
+            System.out.println("组成直角三角形或钝角三角形，(x2,y2)为直角或钝角 ");
+            space = c;
+            return space;
+        }
+        //组成锐角三角形，则求三角形的高
+        System.out.println("组成锐角三角形，则求三角形的高  ");
+        double p = (a + b + c) / 2;// 半周长
+        double s = Math.sqrt(p * (p - a) * (p - b) * (p - c));// 海伦公式求面积
+        space = 2 * s / a;// 返回点到线的距离（利用三角形面积公式求高）
+        return space;
+    }
+
+    //计算两点之间的距离
+    public static double lineSpace(double x1, double y1, double x2, double y2) {
+        double lineLength = 0;
+        lineLength = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+        return lineLength;
+    }
+
+    /**
+     * 一点点（x0,y0）到直线的距离 ，（x2,y2）为直线上一点，angle_为直线的旋转<角度>
+     * 假设对图片上任意点(x,y)，绕一个坐标点(rx0,ry0)旋转a角度后的新的坐标设为(x0, y0)，有公式：
+     *         x0= (x - rx0)*cos(a) + (y - ry0)*sin(a) + rx0 ;
+     *         y0= (y - ry0)*cos(a) - (x - rx0)*sin(a) + ry0;
+     *         此时的旋转点事（0，0）
+     *
+     *         A(x1,y1) 绕 O(x0,y0) 旋转 角度 k 之后的点 B(x2,y2) 的java代码计算方法
+     *         k=new Float(Math.toRadians(k));
+     *         float x2=new Float((x1-x0)*Math.cos(k) +(y1-y0)*Math.sin(k)+x0);
+     *         float y2=new Float(-(x1-x0)*Math.sin(k) + (y1-y0)*Math.cos(k)+y0);
+     *
+     *  @return 小于0 ，在直线线面，下面，左侧 ，大于0 在直线上面，右侧
+     */
+    public static double pointToLine(double x0, double y0, double x2, double y2, double angle_) {
+        double angle = -angle_;
+        ///double angle_radian = angle*Math.PI/180;
+        double angle_radian = Math.toRadians(angle);
+
+        double x0_trans = x0*Math.cos(angle_radian) + y0*Math.sin(angle_radian);
+        double y0_trans = y0*Math.cos(angle_radian) - x0*Math.sin(angle_radian);
+        double x2_trans = x2*Math.cos(angle_radian) + y2*Math.sin(angle_radian);
+        double y2_trans = y2*Math.cos(angle_radian) - x2*Math.sin(angle_radian);
+        ///return y2_trans - y0_trans;
+        return y0_trans - y2_trans;
+    }
+
+
+    /**
+     * 计算坐标系中两个点 坐在直线的<角度>
+     * @return 返回<角度>
+     */
+    public static double getRotate(float x1,float y1,float x2,float y2) {
+        double spanX = x1 - x2;
+        double spanY = y1 - y2;
+        return Math.toDegrees(Math.atan2(spanY, spanX));
+    }
+
+    public static double getRotate(float x1,float y1,float x2,float y2,float degree_last ) {
+        double spanX = x1 - x2;
+        double spanY = y1 - y2;
+        double degree_now = Math.toDegrees(Math.atan2(spanY, spanX));
+        double degree_now_b = degree_now;
+        if (degree_now > 0) {
+            degree_now_b = -360 + degree_now;
+        } else if (degree_now < 0) {
+            degree_now_b = 360 + degree_now;
+        } else if (degree_now == 0) {
+            degree_now_b = 360;
+            double degree_now_c = -360;
+            double differ_a = Math.abs(degree_now - degree_last);
+            double differ_b = Math.abs(degree_now_b - degree_last);
+            double differ_c = Math.abs(degree_now_c - degree_last);
+            if (differ_a < differ_b && differ_a < differ_c) {
+                return degree_now;
+            } else if (differ_b < differ_a && differ_b < differ_c) {
+                return differ_b;
+            } else if (differ_c < differ_a && differ_c < differ_b) {
+                return differ_c;
+            } else {
+                return degree_now;
+            }
+        }
+        double differ_a = Math.abs(degree_now - degree_last);
+        double differ_b = Math.abs(degree_now_b - degree_last);
+        if (differ_a < differ_b) {
+            return degree_now;
+        } else {
+            return degree_now_b;
+        }
+    }
+
+    public static double getRotate__dd(float x1,float y1,float x2,float y2,float degree_last ) {
+        double spanX = x1 - x2;
+        double spanY = y1 - y2;
+        double degree_now = Math.toDegrees(Math.atan2(spanY, spanX));
+        // 0 --- 360
+        double degree_differ = ((degree_last - degree_now) % 360 + 360) % 360;
+        if (degree_differ > 350) {
+
+        } else {
+            return degree_now;
+        }
+        return Math.toDegrees(Math.atan2(spanY, spanX));
+    }
+
+    /**
+     * 一点（x,y）是否在 一矩形中，左上的坐标，右下的坐标，矩形的角度
+     * 平面坐标系中的点
+     * @return
+     */
+    public static boolean pointInRectangle(float x,float y,float x_lt,float y_lt,float x_rb,float y_rb, float angle_) {
+        double angle = -angle_;
+        double angle_radian = Math.toRadians(angle);
+        double x_trans = x*Math.cos(angle_radian) + y*Math.sin(angle_radian);
+        double y_trans = y*Math.cos(angle_radian) - x*Math.sin(angle_radian);
+
+        double x_lt_trans = x_lt*Math.cos(angle_radian) + y_lt*Math.sin(angle_radian);
+        double y_lt_trans = y_lt*Math.cos(angle_radian) - x_lt*Math.sin(angle_radian);
+
+        double x_rb_trans = x_rb*Math.cos(angle_radian) + y_rb*Math.sin(angle_radian);
+        double y_rb_trans = y_rb*Math.cos(angle_radian) - x_rb*Math.sin(angle_radian);
+
+        if ((   x_trans >= x_lt_trans) && (x_trans <= x_rb_trans)
+                && (y_trans >= y_rb_trans) && (y_trans <= y_lt_trans)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 限制一点在 一矩形中活动 ，如超出，返回最近一点
+     */
+    public static double[] pointLimitRectangle(float x,float y,float x_lt,float y_lt,float x_rb,float y_rb, float angle_) {
+        double angle = -angle_;
+        double angle_radian = Math.toRadians(angle);
+        double x_trans = x*Math.cos(angle_radian) + y*Math.sin(angle_radian);
+        double y_trans = y*Math.cos(angle_radian) - x*Math.sin(angle_radian);
+
+        double x_lt_trans = x_lt*Math.cos(angle_radian) + y_lt*Math.sin(angle_radian);
+        double y_lt_trans = y_lt*Math.cos(angle_radian) - x_lt*Math.sin(angle_radian);
+
+        double x_rb_trans = x_rb*Math.cos(angle_radian) + y_rb*Math.sin(angle_radian);
+        double y_rb_trans = y_rb*Math.cos(angle_radian) - x_rb*Math.sin(angle_radian);
+
+        boolean limit = false;
+        if (x_trans < x_lt_trans) {
+            x_trans = x_lt_trans;
+            limit = true;
+        } else if (x_trans > x_rb_trans) {
+            x_trans = x_rb_trans;
+            limit = true;
+        }
+        if (y_trans < y_rb_trans) {
+            y_trans = y_rb_trans;
+            limit = true;
+        }else if (y_trans > y_lt_trans) {
+            y_trans = y_lt_trans;
+            limit = true;
+        }
+
+        if (limit) {
+            angle_radian = -angle_radian;
+            double x_original = x_trans*Math.cos(angle_radian) + y_trans*Math.sin(angle_radian);
+            double y_original = y_trans*Math.cos(angle_radian) - x_trans*Math.sin(angle_radian);
+            return new double[]{x_original,y_original};
+        } else {
+            return null;
+        }
+    }
+
+    public static double[] pointToPointWithAngle(float x1,float y1,float x2,float y2, float angle_) {
+        double angle = angle_;
+        double angle_radian = Math.toRadians(angle);
+        double x1_trans = x1*Math.cos(angle_radian) + y1*Math.sin(angle_radian);
+        double y1_trans = y1*Math.cos(angle_radian) - x1*Math.sin(angle_radian);
+
+        double x2_trans = x2*Math.cos(angle_radian) + y2*Math.sin(angle_radian);
+        double y2_trans = y2*Math.cos(angle_radian) - x2*Math.sin(angle_radian);
+        double[] differ = {x2_trans - x1_trans,y2_trans - y1_trans};
+        return differ;
+    }
+
+    public static double[] getPointWithPointAngle(float x1,float y1,float differ1,float differ2, float angle_) {
+
+        double angle = angle_;
+        double angle_radian = Math.toRadians(angle);
+        double x1_trans = x1*Math.cos(angle_radian) + y1*Math.sin(angle_radian);
+        double y1_trans = y1*Math.cos(angle_radian) - x1*Math.sin(angle_radian);
+
+        double x2_trans = differ1 + x1_trans;
+        double y2_trans = differ2 + y1_trans;
+
+        double x2 = x2_trans*Math.cos(-angle_radian) + y2_trans*Math.sin(-angle_radian);
+        double y2 = y2_trans*Math.cos(-angle_radian) - x2_trans*Math.sin(-angle_radian);
+
+        double[] xy = {x2,y2};
+        return xy;
+    }
+
+    /**
+     * 返回两点之间的距离，坐标系中的坐标
+     * @param x1
+     * @param y1
+     * @param x2
+     * @param y2
+     * @return
+     */
+    public static double pointsDistance(float x1,float y1,float x2,float y2) {
+        return Math.sqrt(Math.pow((x1-x2),2) + Math.pow((y1-y2),2));
+    }
+
+    public static double[] analysisColor(String color_str){
+        double[] color_rgb = new double[]{0d,0d,0d};
+        try {
+            int color_int = Color.parseColor(color_str);
+            /*int color_b = color_int & 0xff;
+            int color_g = (color_int & 0xff00) >> 8;
+            int color_r = (color_int & 0xff0000) >> 16;
+            ALog.i(ALog.Tag2,"191203s-Tools-analysisColor"
+                    + "-color_r->"+color_r
+                    + "-color_g->"+color_g
+                    + "-color_b->"+color_b
+            );*/
+
+            color_rgb[2] = (color_int & 0xff) / 255d;
+            color_rgb[1] = ((color_int & 0xff00) >> 8) / 255d;
+            color_rgb[0] = ((color_int & 0xff0000) >> 16) / 255d;
+            /*ALog.i(ALog.Tag2,"191203s-Tools-analysisColor-2"
+                    + "-color_r->"+color_rgb[0]
+                    + "-color_g->"+color_rgb[1]
+                    + "-color_b->"+color_rgb[2]
+            );*/
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return color_rgb;
+    }
+
+    // 递归法求最大公约数
+    public static int maxCommonDivisor(int m, int n) {
+        if (m < n) {// 保证m>n,若m<n,则进行数据交换
+            int temp = m;
+            m = n;
+            n = temp;
+        }
+        if (m % n == 0) {// 若余数为0,返回最大公约数
+            return n;
+        } else { // 否则,进行递归,把n赋给m,把余数赋给n
+            return maxCommonDivisor(n, m % n);
+        }
+    }
+
+    public static int argb(float alpha, float red, float green, float blue) {
+        return ((int) (alpha * 255.0f + 0.5f) << 24) |
+                ((int) (red   * 255.0f + 0.5f) << 16) |
+                ((int) (green * 255.0f + 0.5f) <<  8) |
+                (int) (blue  * 255.0f + 0.5f);
+    }
+
+    ////========================================
+
+
+
+    ////========================================
+
+    /**
+     * B(t) = (1 - t)^2 * P0 + 2t * (1 - t) * P1 + t^2 * P2, t ∈ [0,1]
+     *
+     * @param t  曲线长度比例
+     * @param p0 起始点
+     * @param p1 控制点
+     * @param p2 终止点
+     * @return t对应的点
+     */
+    public static PointF CalculateBezierPointForQuadratic(float t, PointF p0, PointF p1, PointF p2) {
+        PointF point = new PointF();
+        float temp = 1 - t;
+        point.x = temp * temp * p0.x + 2 * t * temp * p1.x + t * t * p2.x;
+        point.y = temp * temp * p0.y + 2 * t * temp * p1.y + t * t * p2.y;
+        return point;
+    }
+
+    /**
+     * B(t) = P0 * (1-t)^3 + 3 * P1 * t * (1-t)^2 + 3 * P2 * t^2 * (1-t) + P3 * t^3, t ∈ [0,1]
+     *
+     * @param t  曲线-时间-长度比例
+     * @param p0 起始点
+     * @param p1 控制点1
+     * @param p2 控制点2
+     * @param p3 终止点
+     * @return t对应的点
+     */
+    public static PointF CalculateBezierPointForCubic(float t, PointF p0, PointF p1, PointF p2, PointF p3) {
+        PointF point = new PointF();
+        float temp = 1 - t;
+        point.x = p0.x * temp * temp * temp + 3 * p1.x * t * temp * temp + 3 * p2.x * t * t * temp + p3.x * t * t * t;
+        point.y = p0.y * temp * temp * temp + 3 * p1.y * t * temp * temp + 3 * p2.y * t * t * temp + p3.y * t * t * t;
+        return point;
+    }
+
+    public static PointF CalculateBezierPointForCubicddd(float x, PointF p0, PointF p1, PointF p2, PointF p3) {
+        PointF point = new PointF();
+        float t = 0 ;
+        x = p0.x * (1 - t) * (1 - t) * (1 - t) + 3 * p1.x * t * (1 - t) * (1 - t) + 3 * p2.x * t * t * (1 - t) + p3.x * t * t * t;
+
+
+
+        float temp = 1 - t;
+        point.x = p0.x * temp * temp * temp + 3 * p1.x * t * temp * temp + 3 * p2.x * t * t * temp + p3.x * t * t * t;
+        point.y = p0.y * temp * temp * temp + 3 * p1.y * t * temp * temp + 3 * p2.y * t * t * temp + p3.y * t * t * t;
+        return point;
+    }
+
+    //================================
 
 
 }
