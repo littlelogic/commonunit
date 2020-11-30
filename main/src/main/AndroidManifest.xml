@@ -12,16 +12,31 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
-        <activity android:name="com.badlogic.test.MainActivity"
+        <activity android:name="com.badlogic.Jetpack.MainActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:windowSoftInputMode="stateHidden|adjustResize"
             android:launchMode="singleTop"
+            android:theme="@style/Theme.AppCompat"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+        </activity>
+
+        <activity android:name="com.badlogic.Jetpack.LiveDataActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:windowSoftInputMode="stateHidden|adjustResize"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.AppCompat"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity android:name="com.badlogic.Jetpack.ViewModelBindingActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:windowSoftInputMode="stateHidden|adjustResize"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.AppCompat"
+            android:screenOrientation="portrait">
         </activity>
 
 

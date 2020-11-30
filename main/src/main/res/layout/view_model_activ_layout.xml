@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <import type="com.badlogic.test.TestModel"/>
+        <import type="com.badlogic.others.TestModel"  alias="TestModelB"/>s
+
+
+        <variable
+            name="testA"
+            type="TestModel" />
+        <variable
+            name="testB"
+            type="TestModelB" />
+
+    </data>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:background="@color/white"
+        android:paddingTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:background="#99000000"
+            android:gravity="center"
+            android:id="@+id/topLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="test"
+            android:padding="5dp"
+            android:textSize="22dp"
+            android:textColor="@color/white"
+            />
+        <!--
+         android:text="@{testA != null ? testA.name :'"没错"'}"
+         todo
+         android:text="@{@string/test+test.name}"
+         内容是以@{}包裹的，需要注意下android:text需要拼接字符串的话，字符串要写在values/strings.xml中，
+         不然可能你写个取消、确定之类的没问题，长点的字符串一运行就GG了，具体原因不知道，
+         可能是google希望规范点的写法，也可能是个bug，记得就好。
+         列一下几种常用数据的引用方法：
+
+        -->
+        <TextView
+            android:background="#99000000"
+            android:gravity="center"
+            android:id="@+id/top"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@{  @string/app_name + @string/blank  + testB.Type + @string/blank + testA.name + @string/blank + testB.address }"
+            android:padding="5dp"
+            android:textSize="22dp"
+            android:textColor="@color/white"
+            android:layout_marginBottom="40dp"
+            />
+
+
+
+
+
+        <TextView
+            android:background="#99000000"
+            android:id="@+id/hTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="8dp"
+            android:text="resul"
+            android:textSize="32dp"
+            android:textColor="@color/white"
+            android:layout_marginBottom="30dp"
+            />
+
+        <TextView
+            android:background="#99000000"
+            android:gravity="center"
+            android:id="@+id/add_one"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="加一"
+            android:padding="5dp"
+            android:textSize="22dp"
+            android:textColor="@color/white"
+            android:layout_marginBottom="10dp"
+            />
+
+        <TextView
+            android:background="#99000000"
+            android:gravity="center"
+            android:id="@+id/add_two"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="加二"
+            android:padding="5dp"
+            android:textSize="22dp"
+            android:textColor="@color/white"
+            android:layout_marginBottom="10dp"
+            />
+
+    </LinearLayout>
+
+</layout>
