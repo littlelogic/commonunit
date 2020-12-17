@@ -49,6 +49,27 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.startActivity(mIntent);
             }
         });
+        addTextView("RoomDatabase",new Runnable(){
+            @Override
+            public void run() {
+                Intent mIntent=new Intent(MainActivity.this, com.example.roombasic.MainActivity.class);
+                MainActivity.this.startActivity(mIntent);
+            }
+        });
+        addTextView("ListAdapter",new Runnable(){
+            @Override
+            public void run() {
+                Intent mIntent=new Intent(MainActivity.this, com.teaphy.diffutildemo.MainActivity.class);
+                MainActivity.this.startActivity(mIntent);
+            }
+        });
+        addTextView("navigation",new Runnable(){
+            @Override
+            public void run() {
+                Intent mIntent=new Intent(MainActivity.this, com.example.android.codelabs.navigation.MainActivity.class);
+                MainActivity.this.startActivity(mIntent);
+            }
+        });
 
 
 

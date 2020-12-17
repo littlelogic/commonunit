@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/commonunit.iml" filepath="$PROJECT_DIR$/.idea/modules/commonunit.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/main/commonunit.main.iml" filepath="$PROJECT_DIR$/.idea/modules/main/commonunit.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/test/commonunit.test.iml" filepath="$PROJECT_DIR$/.idea/modules/test/commonunit.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/utils/commonunit.utils.iml" filepath="$PROJECT_DIR$/.idea/modules/utils/commonunit.utils.iml" />
     </modules>
   </component>

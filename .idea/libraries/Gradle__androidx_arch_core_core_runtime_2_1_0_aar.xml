@@ -1,9 +1,12 @@
 <component name="libraryTable">
   <library name="Gradle: androidx.arch.core:core-runtime:2.1.0@aar">
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/d1f04cd1aae8c57fcddeab84272303a0/jars/classes.jar!/" />
       <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/d1f04cd1aae8c57fcddeab84272303a0/res" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/d1f04cd1aae8c57fcddeab84272303a0/AndroidManifest.xml" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/9bc290ae7da4f9f809aa32b1521bff9a/res" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/ad95eed475d1bf9e9efbd8a3b928efab/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/a704f0043813ccee2fc1b68c6b300091/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/a704f0043813ccee2fc1b68c6b300091/res" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/a704f0043813ccee2fc1b68c6b300091/AndroidManifest.xml" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
