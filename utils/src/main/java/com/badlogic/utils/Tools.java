@@ -16,6 +16,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -72,6 +73,7 @@ import androidx.annotation.StringRes;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.PermissionChecker;
+import androidx.core.graphics.drawable.DrawableCompat;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -132,6 +134,17 @@ public class Tools {
         // View.EMPTY_STATE_SET--没有任何状态时显示的图片，我们给它设置我空集合
         bg.addState(new int[]{}, drawable);
         return bg;
+    }
+
+    /*
+    Tools.tintDrawable(((TextView)findViewById(R.id.unlock_hint)).getBackground(), ColorStateList.valueOf(0xffAA00FF));
+    此方法设置.9图，
+    setTint(0xff304FFE); 方法设置.9图， 会崩溃
+     */
+    public static Drawable tintDrawable(Drawable drawable, ColorStateList colors) {
+        final Drawable wrappedDrawable = DrawableCompat.wrap(drawable);
+        DrawableCompat.setTintList(wrappedDrawable, colors);
+        return wrappedDrawable;
     }
 
     /**
