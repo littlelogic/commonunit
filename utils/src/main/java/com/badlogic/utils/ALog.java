@@ -16,6 +16,101 @@ public class ALog {
 	public static final String Tag6 = "wjw06";
 	public static final String Error = "error";
 
+	///--------------------
+
+	public interface IfLog {
+		String log();
+	}
+
+	public  static  void  i(IfLog hILog) {
+		if (mark && hILog != null) {
+			Log.i(Tag2, hILog.log());     //Green
+		}
+	}
+	public  static  void  e(IfLog hILog) {
+		if (mark && hILog != null) {
+			Log.e(Tag2, hILog.log());     //Red
+		}
+	}
+	public  static  void  d(IfLog hILog) {
+		if (mark && hILog != null) {
+			Log.d(Tag2, hILog.log());     //蓝色-blue
+		}
+	}
+	public  static  void  v(IfLog hILog) {
+		if (mark && hILog != null) {
+			Log.v(Tag2, hILog.log());     //黑色-black
+		}
+	}
+	public  static  void  w(IfLog hILog) {
+		if (mark && hILog != null) {
+			Log.w(Tag2, hILog.log());     //黄色-
+		}
+	}
+
+	public  static  void  i(String string1,IfLog hILog){
+		if (mark && hILog != null) {
+			Log.i(string1, hILog.log());     //Green
+		}
+	}
+	public  static  void  e(String string1,IfLog hILog){
+		if (mark && hILog != null) {
+			Log.e(string1, hILog.log());     //Red
+		}
+	}
+	public  static  void  d(String string1,IfLog hILog){
+		if (mark && hILog != null) {
+			Log.d(string1, hILog.log());     //蓝色-blue
+		}
+	}
+	public  static  void  v(String string1,IfLog hILog){
+		if (mark && hILog != null) {
+			Log.v(string1, hILog.log());     //黑色-black
+		}
+	}
+	public  static  void  w(String string1,IfLog hILog){
+		if (mark && hILog != null) {
+			Log.w(string1, hILog.log());     //黄色-
+		}
+	}
+	public  static  void  first(String string1,IfLog hILog){
+		if (mark && hILog != null) {
+			Log.e(string1, hILog.log());     //Green
+		}
+	}
+
+	public  static  void  i(IfLog hILog1,IfLog hILog){
+		if (mark && hILog != null && hILog1 != null) {
+			Log.i(hILog1.log(), hILog.log());     //Green
+		}
+	}
+	public  static  void  e(IfLog hILog1,IfLog hILog){
+		if (mark && hILog != null && hILog1 != null) {
+			Log.e(hILog1.log(), hILog.log());     //Red
+		}
+	}
+	public  static  void  d(IfLog hILog1,IfLog hILog){
+		if (mark && hILog != null && hILog1 != null) {
+			Log.d(hILog1.log(), hILog.log());     //蓝色-blue
+		}
+	}
+	public  static  void  v(IfLog hILog1,IfLog hILog){
+		if (mark && hILog != null && hILog1 != null) {
+			Log.v(hILog1.log(), hILog.log());     //黑色-black
+		}
+	}
+	public  static  void  w(IfLog hILog1,IfLog hILog){
+		if (mark && hILog != null && hILog1 != null) {
+			Log.w(hILog1.log(), hILog.log());     //黄色-
+		}
+	}
+	public  static  void  first(IfLog hILog1,IfLog hILog){
+		if (mark && hILog != null && hILog1 != null) {
+			Log.e(hILog1.log(), hILog.log());     //Green
+		}
+	}
+
+	///--------------------
 
 	public  static  void  i(String i){
 		if (mark) {

@@ -1,9 +1,10 @@
 package com.teaphy.diffutildemo
 //com.teaphy.diffutildemo.MainActivity
+import android.app.Activity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.badlogic.ui.R
-import com.teaphy.diffutildemo.adapter.DiffListAdapter
 import kotlinx.android.synthetic.main.differ_activity_main.*
 import org.jetbrains.anko.startActivity
 
@@ -32,22 +33,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setListener() {
-        btnDiff.setOnClickListener({
+        btnDiff.setOnClickListener {
             startActivity<DiffActivity>()
-        })
+        }
 
-        btnAld.setOnClickListener({
+        btnAld.setOnClickListener {
             startActivity<AsyncListDifferActivity>()
-        })
+        }
 
-        btnLa.setOnClickListener({
+        btnLa.setOnClickListener {
             startActivity<ListAdapterActivity>()
-        })
+        }
 
-        btnSl.setOnClickListener({
+        btnSl.setOnClickListener {
             startActivity<SortedListActivity>()
-        })
+        }
     }
+
 
 
 }

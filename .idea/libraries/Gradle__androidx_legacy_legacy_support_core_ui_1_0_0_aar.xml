@@ -1,11 +1,9 @@
 <component name="libraryTable">
   <library name="Gradle: androidx.legacy:legacy-support-core-ui:1.0.0@aar">
     <CLASSES>
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/c3866dba043e4784da87e265fe8362cf/res" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/9871332c24c53cc11800b2840bd8bf98/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/3bc77405d5c3f5a2cc1980ac8702c3b3/jars/classes.jar!/" />
       <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/3bc77405d5c3f5a2cc1980ac8702c3b3/res" />
       <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/3bc77405d5c3f5a2cc1980ac8702c3b3/AndroidManifest.xml" />
-      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/3bc77405d5c3f5a2cc1980ac8702c3b3/jars/classes.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
