@@ -28,9 +28,6 @@ public abstract class WordDatabase extends RoomDatabase {
     // 会默认实现
     public abstract WordDao getWordDao();
 
-
-
-
     static final Migration MIGRATION_2_3 = new Migration(2,3) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {

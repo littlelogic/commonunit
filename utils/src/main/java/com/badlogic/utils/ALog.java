@@ -18,6 +18,12 @@ public class ALog {
 
 	///--------------------
 
+	public static void setMark(boolean mark_){
+		mark = mark_;
+	}
+
+	///--------------------
+
 	public interface IfLog {
 		String log();
 	}

@@ -45,8 +45,13 @@ public class Word {
 //        this.foo = foo;
 //    }
 
+    /**
+     * todo 参数的名称和字段的名称要一致,数据库构造要求
+     * @param word
+     * @param chineseMeaning
+     */
     public Word(String word, String chineseMeaning) {
-        this.word = word;
+        this.word = word;//参数的名称和字段的名称要一致,
         this.chineseMeaning = chineseMeaning;
     }
 

@@ -493,6 +493,22 @@ public class Tools {
         }
     }
 
+    public static void vibrate() {
+        vibrate(Tools.getApplication());
+    }
+
+    public static void vibrate(long milliseconds) {
+        vibrate(Tools.getApplication(),milliseconds);
+    }
+
+    public static String subZeroAndDot(String s) {
+        if (s.indexOf(".") > 0) {
+            s = s.replaceAll("0+?$", "");//去掉多余的0
+            s = s.replaceAll("[.]$", "");//如最后一位是.则去掉
+        }
+        return s;
+    }
+
     public int  getTargetSdkVersion(Context mContext){
         final int targetSdkVersion = mContext.getApplicationInfo().targetSdkVersion;
         return targetSdkVersion;
@@ -520,6 +536,28 @@ public class Tools {
             e.printStackTrace();
         }
         return name;
+    }
+
+    public static String getHost(String url) {
+        String domain = "";
+        if (!TextUtils.isEmpty(url) && url.startsWith("http")) {
+            try {
+                String host = Uri.parse(url).getHost();
+                return host;
+            } catch (Exception ex) {
+            }
+        }
+        return domain;
+    }
+
+    private static String app_id = "";
+
+    public static void setAppId(String mark){
+        app_id = mark;
+    }
+
+    public static String getAppId(){
+        return app_id;
     }
 
 
@@ -852,6 +890,25 @@ public class Tools {
             e.printStackTrace();
         }
         return bi.toString(16);
+    }
+
+    ///=========================
+
+    public static boolean showSoftInput(EditText et) {
+        try {
+            InputMethodManager inputManager =(InputMethodManager) et.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            return inputManager.showSoftInput(et, InputMethodManager.RESULT_UNCHANGED_SHOWN);
+        }catch (Throwable e) {
+            e.getStackTrace();
+        }
+        return false;
+    }
+
+    public static void hideSoftInput(EditText et) {
+        try {
+            InputMethodManager inputManager = (InputMethodManager) et.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            inputManager.hideSoftInputFromWindow(et.getWindowToken(), 0);
+        }catch (Throwable e) {}
     }
 
     ///=========================
@@ -1794,22 +1851,22 @@ public class Tools {
         return "video/3gp";
     }
 
-    public boolean isMainThread() {
+    public static boolean isMainThread() {
         return Looper.getMainLooper() == Looper.myLooper();
     }
 
-    public boolean isMainThread_2() {
+    public static boolean isMainThread_2() {
         return Looper.getMainLooper().getThread() == Thread.currentThread();
     }
 
-    public boolean isMainThread_3() {
+    public static boolean isMainThread_3() {
         return Looper.getMainLooper().getThread().getId() == Thread.currentThread().getId();
     }
 
     /**
      * path转uri
      */
-    private Uri getUri(Context mContext,String path){
+    public static Uri getUri(Context mContext,String path){
         Uri uri = null;
         if (path != null) {
             path = Uri.decode(path);

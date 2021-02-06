@@ -2,10 +2,14 @@ package com.badlogic.Jetpack;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -13,12 +17,25 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.badlogic.kotlin.KotlinActivity;
 import com.badlogic.ui.R;
+import com.badlogic.utils.ALog;
 import com.badlogic.utils.Tools;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
@@ -32,9 +49,14 @@ public class MainActivity extends AppCompatActivity {
     ///----
     LinearLayout contentLayout;
 
+    private ScreenBroadcastReceiver screenBroadcastReceiver = null;
+    private Context context = null;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        context = this;
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         this.setContentView(R.layout.main_activ);
         setStatusBarTransparent();
@@ -76,8 +98,90 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.startActivity(mIntent);
             }
         });
+        addTextView("KotlinActivity",new Runnable(){
+            @Override
+            public void run() {
+                KotlinActivity.startMe(MainActivity.this);
+            }
+        });
 
 
+
+        JSONObject object2 =new JSONObject();
+        try {
+            String null_str = null;
+            object2.put("baseUrl","baseUrl" );
+            object2.put("from_title","from_title" );
+            object2.put("from_title",null_str );
+            ALog.i("MainActivity-onCreate-JSONObject组装json串，'null'会被忽略-->"+object2.toString());
+
+        }catch (Exception e){
+
+        }
+
+
+    }
+
+    /**
+     * 将字符串写入指定文件(当指定的父路径中文件夹不存在时，会最大限度去创建，以保证保存成功！)
+     *
+     * @param res  原字符串
+     * @param filePath 文件路径
+     * @return 成功标记
+     */
+    public static boolean string2File(String res, String filePath, String encoding) {
+        boolean flag = true;
+        File distFile = new File(filePath);
+        if (!distFile.getParentFile().exists()) {
+            distFile.getParentFile().mkdirs();
+        }
+        /*
+         todo 实现Closeable的类声明
+         */
+        try (BufferedReader bufferedReader = new BufferedReader(new StringReader(res));
+             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(distFile), encoding))) {
+            char buf[] = new char[2048];         //字符缓冲区
+            int len;
+            while ((len = bufferedReader.read(buf)) != -1) {
+                bufferedWriter.write(buf, 0, len);
+            }
+        } catch (Exception e) {
+            return flag;
+        }
+        return flag;
+    }
+
+    public static boolean string2File2(String res, String filePath, String encoding) {
+        boolean flag = true;
+        File distFile = new File(filePath);
+        if (!distFile.getParentFile().exists()) {
+            distFile.getParentFile().mkdirs();
+        }
+        BufferedReader bufferedReader = null;
+        BufferedWriter bufferedWriter = null;
+        try {
+            bufferedReader = new BufferedReader(new StringReader(res));
+            bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(distFile), encoding));
+            char buf[] = new char[2048];         //字符缓冲区
+            int len;
+            while ((len = bufferedReader.read(buf)) != -1) {
+                bufferedWriter.write(buf, 0, len);
+            }
+        } catch (Exception e) {
+            return flag;
+        } finally {
+            try {
+                if(bufferedReader!=null){
+                    bufferedReader.close();
+                }
+                if(bufferedWriter!=null){
+                    bufferedWriter.close();
+                }
+            } catch (IOException e2) {
+                //...
+            }
+        }
+        return flag;
     }
 
     private void setStatusBarTransparent() {
@@ -219,6 +323,72 @@ public class MainActivity extends AppCompatActivity {
         contentLayout.addView(hTextView,hParam);
 
     }
+
+    ///========================================================================
+
+
+    @Override
+    protected void onResume() {
+        // TODO Auto-generated method stub
+        super.onResume();
+
+        //注册这个广播
+        registerScreenBroadcastReceiver();
+    }
+
+    private void registerScreenBroadcastReceiver() {
+        screenBroadcastReceiver = new ScreenBroadcastReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Intent.ACTION_SCREEN_OFF);//当屏幕锁屏的时候触发
+        intentFilter.addAction(Intent.ACTION_SCREEN_ON);//当屏幕解锁的时候触发
+        intentFilter.addAction(Intent.ACTION_USER_PRESENT);//当用户重新唤醒手持设备时触发
+        context.registerReceiver(screenBroadcastReceiver, intentFilter);
+        Log.i("screenBR", "screenBroadcastReceiver注册了");
+    }
+
+    /*重写广播
+    首先我们再次强调ACTION_SCREEN_ON和ACTION_SCREEN_OFF只能通过动态注册的方式
+    （代码内context.register和unregister），而ACTION_USER_PRESENT则是动态、静态注册两种方式都可以。
+    那么我们的突破口便是：我们可以动态地注册一个关于屏幕解锁后（ACTION_USER_PRESENT）的广播者，
+    并且在这个广播的onReceive方法中实现我们要做的一些操作。例如我们可以开启一个Service服务，
+    用于注册我们所想要的这个Broadcast Receiver
+     */
+    class ScreenBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String strAction = intent.getAction();
+            if (Intent.ACTION_SCREEN_OFF.equals(strAction)){
+                //屏幕锁屏
+                Log.i("screenBR", "屏幕锁屏：ACTION_SCREEN_OFF触发");
+                Toast.makeText(context, "锁屏了", Toast.LENGTH_SHORT).show();
+            }else if (Intent.ACTION_SCREEN_ON.equals(strAction)){
+                //屏幕解锁(实际测试效果，不能用这个来判断解锁屏幕事件)
+                //【因为这个是解锁的时候触发，而解锁的时候广播还未注册】
+                Log.i("screenBR", "屏幕解锁：ACTION_SCREEN_ON触发");
+                Toast.makeText(context, "解锁了", Toast.LENGTH_SHORT).show();
+            }else if (Intent.ACTION_USER_PRESENT.equals(strAction)){
+                //屏幕解锁(该Action可以通过静态注册的方法注册)
+                //在解锁之后触发的，广播已注册
+                Log.i("screenBR", "屏幕解锁：ACTION_USER_PRESENT触发");
+                Toast.makeText(context, "解锁了", Toast.LENGTH_SHORT).show();
+            }else{
+                //nothing
+            }
+        }
+
+    }
+    @Override
+    protected void onPause() {
+        // TODO Auto-generated method stub
+        super.onPause();
+        context.unregisterReceiver(screenBroadcastReceiver);
+        Log.i("screenBR", "screenBroadcastReceiver取消注册了");
+    }
+
+
+
+
 
 
 }
