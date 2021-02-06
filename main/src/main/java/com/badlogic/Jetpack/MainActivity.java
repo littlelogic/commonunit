@@ -39,6 +39,9 @@ import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import static com.badlogic.utils.ALog._b;
+import static com.badlogic.utils.ALog._i;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -118,6 +121,19 @@ public class MainActivity extends AppCompatActivity {
         }catch (Exception e){
 
         }
+
+        ALog.i(_i?_b: "MainActivity-onCreate-JSONObject组装json串，'null'会被" +
+                "忽略-->"+object2.toString());
+
+        ALog.i(_i?_b: "210206t-MainActivity-onCreate-1111-->" +
+                "-test2->" + Object.class + "\n"+
+                "-test2->" + 2222222 + "\n"+
+                "-test2->" + 3333333 +
+                "");
+
+
+
+        ALog.i(()-> "210206t-MainActivity-onCreate-1111-->" + object2.toString());
 
 
     }

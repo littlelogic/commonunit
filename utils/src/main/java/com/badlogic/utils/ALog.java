@@ -7,6 +7,12 @@ public class ALog {
 	public static boolean mark = false;
 	public static boolean i = false;
 	public static boolean l = false;
+
+	public static final String _b = "";
+	public static boolean _i = true;
+	public static boolean _1 = true;
+	public static boolean _$ = true;
+	public static boolean _￥ = true;
 	//-------
 	public static final String Tag1 = "wjw01";
 	public static final String Tag2 = "wjw02";
@@ -20,6 +26,23 @@ public class ALog {
 
 	public static void setMark(boolean mark_){
 		mark = mark_;
+		_i = _1 = _$ = _￥ = mark;
+
+	}
+
+	///--------------------
+
+	private void test(){
+		ALog.i(_i?_b: "210206t-MainActivity-onCreate-1111->" +
+				"-test2->" + 2222222 + "\n"+
+				"-test2->" + 3333333 +
+				"");
+
+		ALog.i(_i?_b: "210206t-MainActivity-onCreate-1111-->" +
+				"-test2->" + Object.class + "\n"+
+				"-test2->" + 2222222 + "\n"+
+				"-test2->" + 3333333 +
+				"");
 	}
 
 	///--------------------
