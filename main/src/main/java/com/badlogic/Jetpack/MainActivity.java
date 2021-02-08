@@ -134,7 +134,13 @@ public class MainActivity extends AppCompatActivity {
 
 
         ALog.i(()-> "210206t-MainActivity-onCreate-1111-->" + object2.toString());
+        ALog.ii(() -> {
 
+        });
+        ALog.i2(() -> {
+            String ddd = object2.toString();
+            return "210206t-MainActivity-onCreate-1111-ddd->"+ddd;
+        });
 
     }
 

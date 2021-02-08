@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 背景颜色 -->
+    <item android:drawable="@color/white" />
+
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/spalasbg"/>
+    </item>
+
+    <item
+        android:left="42dp"
+        android:right="42dp">
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/close_c" />
+    </item>
+
+</layer-list>
+
+
+<!--
+
+ android:src="@drawable/down_full_icon"/>
+
+item  android:bottom
+
+<item
+        android:bottom="20dp"
+        android:gravity="bottom|center_horizontal">
+        <bitmap android:src="@drawable/start_logo"/>
+    </item>
+
+ <item
+        android:drawable="@drawable/start_logo"
+        android:gravity="center"
+        android:bottom="140dp"
+        android:width="130dp"
+        android:height="60dp"/>
+
+
+
+
+<item
+        android:drawable="@drawable/start_logo"
+        android:gravity="center"
+        android:bottom="140dp"
+        android:width="130dp"
+        android:height="60dp">
+
+android:src="@drawable/splash_start_pic"
+
+<item
+        android:width="200dp"
+        android:height="200dp"
+        android:drawable="@drawable/splash_start_pic"
+        android:gravity="center" />
+-->

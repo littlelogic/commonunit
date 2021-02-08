@@ -47,6 +47,25 @@ public class ALog {
 
 	///--------------------
 
+	public interface RunLog {
+		String log();
+	}
+
+	public  static  void  ii(Runnable run) {
+		if (mark && run != null) {
+//			Log.i(Tag2, hIrunLog.log());     //Green
+		}
+	}
+
+	public  static  void  i2(RunLog run) {
+		if (mark && run != null) {
+//			Log.i(Tag2, hIrunLog.log());     //Green
+		}
+	}
+
+
+	///--------------------
+
 	public interface IfLog {
 		String log();
 	}

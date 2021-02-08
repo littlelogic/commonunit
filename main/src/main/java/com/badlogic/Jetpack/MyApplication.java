@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.badlogic.others.SDCardListener;
 import com.badlogic.utils.ALog;
 import com.badlogic.utils.Tools;
 
@@ -36,6 +37,8 @@ public class MyApplication extends Application {
     }
 
 
+    SDCardListener  listener;
+
     @Override
     public void onCreate() {
         Tools.setApplication(this);
@@ -49,6 +52,19 @@ public class MyApplication extends Application {
         ///----------
         super.onCreate();
         registerActivity();
+        //-----
+
+        /*
+        todo 需要在长生命周期，引用,被系统回收就接受不到事件了
+         */
+        listener = new SDCardListener("/sdcard");
+        //开始监听
+        listener.startWatching();
+        /*
+         * 在这里做一些操作，比如创建目录什么的
+         */
+        //最后停止监听
+        listener.stopWatching();
     }
 
     private List<Activity> ActivityList = new ArrayList<>();
