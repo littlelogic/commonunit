@@ -232,6 +232,19 @@ public class MainActivity extends AppCompatActivity {
         this.findViewById(R.id.OutScrollView).setPadding(0,statusBarHeight,0,0);
     }
 
+    /*private void setStatusBarTransparent_2() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val window: Window = window
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE)
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            window.setStatusBarColor(Color.TRANSPARENT)
+        } else {
+            window.statusBarColor = 0xFF_FF_CB_00.toInt()
+        }
+    }*/
+
     public static void setStatusBarColor(Activity activity, int color, boolean fullScreen) {
         if (Build.VERSION.SDK_INT >= 21) {
             if(activity == null || activity.isDestroyed())return;
