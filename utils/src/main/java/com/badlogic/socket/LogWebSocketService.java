@@ -32,8 +32,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * WebSocket实时日志传输服务
  */
-//public class LogWebSocketService extends BaseLogWebSocketService {
-    public class LogWebSocketService extends Service {
+public class LogWebSocketService extends Service {
 
     private static final String TAG = "LogWebSocketService";
     public static final int PORT_DEAFULT = 8127;
@@ -402,19 +401,6 @@ import java.util.concurrent.TimeUnit;
 
     private void showNotification(String title, String message) {
         // 创建前台服务通知（如果需要）
-        // 这部分代码根据Android版本不同有所差异
-
-       /* NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
-        Notification notification = builder.setContentTitle("日志同步服务运行中")
-                .setContentText("正在与电脑同步日志...")
-                .setSmallIcon(android.R.drawable.ic_dialog_info) // 必须设置一个有效的小图标
-                .setPriority(NotificationCompat.PRIORITY_LOW)
-                .build();
-
-        // 关键：启动前台服务，并绑定通知
-        startForeground(NOTIFICATION_ID, notification);*/
-
-
         // 1. 创建通知渠道（Android 8.0+ 必需）
         createNotificationChannel();
         // 2. 尽早启动前台服务

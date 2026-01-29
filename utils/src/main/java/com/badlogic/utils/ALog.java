@@ -1,6 +1,9 @@
 package com.badlogic.utils;
 
+import android.content.Context;
 import android.util.Log;
+
+import com.badlogic.socket.LogWebSocketService;
 
 public class ALog {
 
@@ -28,6 +31,28 @@ public class ALog {
 		mark = mark_;
 		_i = _1 = _$ = _￥ = mark;
 
+	}
+
+
+	private static Context appContext;
+	private static boolean logWebSocketMark = false;
+
+	public static void setLogWebSocket(Context context){
+		logWebSocketMark = true;
+		appContext = context.getApplicationContext();
+		LogWebSocketService.launch(context);
+	}
+
+	public static void setLogWebSocket(Context context, int port_out){
+		logWebSocketMark = true;
+		appContext = context.getApplicationContext();
+		LogWebSocketService.launch(context,port_out);
+	}
+
+	private static void sendLogToWebSocket(String text){
+		if (logWebSocketMark && appContext != null) {
+			LogWebSocketService.sendLog(appContext, text);
+		}
 	}
 
 	///--------------------
