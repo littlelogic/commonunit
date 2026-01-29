@@ -1,12 +1,16 @@
 package com.badlogic.socket;
 
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+
+import androidx.core.app.NotificationCompat;
 
 import com.google.gson.Gson;
 
@@ -28,7 +32,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * WebSocket实时日志传输服务
  */
-public class LogWebSocketService extends BaseLogWebSocketService {
+//public class LogWebSocketService extends BaseLogWebSocketService {
+    public class LogWebSocketService extends Service {
 
     private static final String TAG = "LogWebSocketService";
     public static final int PORT_DEAFULT = 8127;
@@ -414,6 +419,34 @@ public class LogWebSocketService extends BaseLogWebSocketService {
         createNotificationChannel();
         // 2. 尽早启动前台服务
         startForegroundServiceWithNotification();
+    }
+
+    private int NOTIFICATION_ID = 1; // 通知ID，必须唯一且不为0
+    private String CHANNEL_ID = "log_websocket_channel"; // 通知渠道ID
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String channelName = "日志同步服务";
+            int importance = NotificationManager.IMPORTANCE_LOW; // 或 DEFAULT，根据需求
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, channelName, importance);
+            channel.setDescription("用于保持WebSocket连接同步日志");
+
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private void  startForegroundServiceWithNotification() {
+        // 构建一个符合前台服务要求的通知
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
+        Notification notification = builder.setContentTitle("日志同步服务运行中")
+                .setContentText("正在与电脑同步日志...")
+                .setSmallIcon(android.R.drawable.ic_dialog_info) // 必须设置一个有效的小图标
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build();
+
+        // 关键：启动前台服务，并绑定通知
+        startForeground(NOTIFICATION_ID, notification);
     }
 
 }

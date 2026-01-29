@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--     <style name="StartSplashTheme" parent="Theme.AppCompat.NoActionBar"> -->
+    <style name="StartSplashTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowBackground">@drawable/splash</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:statusBarColor">@color/transparent</item>
+        <!--状态栏是否覆盖在ContentView上-->
+        <item name="android:windowDrawsSystemBarBackgrounds">false</item>
+        <!-- 适配9.0以上闪屏页顶部黑条 -->
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+</resources>

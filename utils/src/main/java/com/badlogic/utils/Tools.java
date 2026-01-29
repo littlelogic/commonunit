@@ -1430,7 +1430,11 @@ public class Tools {
         } catch (Exception ex) {
             ALog.i("LightVideoHelper","Exception:" + ex);
         } finally {
-            mmr.release();
+            try {
+                mmr.release();
+            } catch (Exception e) {
+                ALog.i("LightVideoHelper","Exception:" + e);
+            }
         }
         return ;
     }
@@ -1453,7 +1457,11 @@ public class Tools {
         } catch (Exception ex) {
             ALog.i("LightVideoHelper","Exception:" + ex);
         } finally {
-            mmr.release();
+            try {
+                mmr.release();
+            } catch (Exception e) {
+                ALog.i("LightVideoHelper","Exception:" + e);
+            }
         }
         return duration;
     }
