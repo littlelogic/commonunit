@@ -6,6 +6,7 @@ import android.os.HandlerThread;
 import android.os.Message;
 import android.util.Log;
 
+import com.badlogic.socket.NetworkUtils;
 import com.google.gson.Gson;
 
 import org.java_websocket.WebSocket;
@@ -161,7 +162,33 @@ public class LogWebSocketHelper extends HandlerThread{
     /**
      * 发送结构化日志
      */
-    public void sendStructuredLog(Context context, LogEntry logEntry) {
+
+//    /**
+//     *  ['INFO', 'WARN', 'ERROR', 'DEBUG']
+//
+//     */
+    public void sendStructuredLog(String level, String tag, String message) {
+        sendStructuredLog(new LogEntry(level,tag,message));
+    }
+
+    public void sendInfoLog(String tag, String message) {
+        sendStructuredLog(new LogEntry("INFO",tag,message));
+    }
+
+    public void sendDebugLog(String tag, String message) {
+        sendStructuredLog(new LogEntry("DEBUG",tag,message));
+    }
+
+    public void sendWarnLog(String tag, String message) {
+        sendStructuredLog(new LogEntry("WARN",tag,message));
+    }
+
+    public void sendErrorLog(String tag, String message) {
+        sendStructuredLog(new LogEntry("ERROR",tag,message));
+    }
+
+
+    public void sendStructuredLog(LogEntry logEntry) {
         Message message = Message.obtain();
         message.what = SEND_LOG;
         message.obj = logEntry;
@@ -407,6 +434,9 @@ public class LogWebSocketHelper extends HandlerThread{
         private long timestamp;
         private String thread;
 
+        /*
+        ['INFO', 'WARN', 'ERROR', 'DEBUG']
+         */
         public LogEntry(String level, String tag, String message) {
             this.level = level;
             this.tag = tag;

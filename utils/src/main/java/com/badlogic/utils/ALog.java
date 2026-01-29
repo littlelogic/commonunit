@@ -56,6 +56,12 @@ public class ALog {
 		}
 	}
 
+	private static void sendLogToWebSocket(String level, String tag, String message){
+		if (logWebSocketMark && appContext != null) {
+			LogWebSocketHelper.getInstance().sendStructuredLog(level,tag,message);
+		}
+	}
+
 	///--------------------
 
 	private void test(){
@@ -99,88 +105,105 @@ public class ALog {
 	public  static  void  i(IfLog hILog) {
 		if (mark && hILog != null) {
 			Log.i(Tag2, hILog.log());     //Green
+			sendLogToWebSocket(Tag2,"INFO",hILog.log());
 		}
 	}
 	public  static  void  e(IfLog hILog) {
 		if (mark && hILog != null) {
 			Log.e(Tag2, hILog.log());     //Red
+			sendLogToWebSocket(Tag2,"ERROR",hILog.log());
 		}
 	}
 	public  static  void  d(IfLog hILog) {
 		if (mark && hILog != null) {
 			Log.d(Tag2, hILog.log());     //蓝色-blue
+			sendLogToWebSocket(Tag2,"DEBUG",hILog.log());
 		}
 	}
 	public  static  void  v(IfLog hILog) {
 		if (mark && hILog != null) {
 			Log.v(Tag2, hILog.log());     //黑色-black
+			sendLogToWebSocket(Tag2,"INFO",hILog.log());
 		}
 	}
 	public  static  void  w(IfLog hILog) {
 		if (mark && hILog != null) {
 			Log.w(Tag2, hILog.log());     //黄色-
+			sendLogToWebSocket(Tag2,"WARN",hILog.log());
 		}
 	}
 
 	public  static  void  i(String string1,IfLog hILog){
 		if (mark && hILog != null) {
 			Log.i(string1, hILog.log());     //Green
+			sendLogToWebSocket(string1,"INFO",hILog.log());
 		}
 	}
 	public  static  void  e(String string1,IfLog hILog){
 		if (mark && hILog != null) {
 			Log.e(string1, hILog.log());     //Red
+			sendLogToWebSocket(string1,"ERROR",hILog.log());
 		}
 	}
 	public  static  void  d(String string1,IfLog hILog){
 		if (mark && hILog != null) {
 			Log.d(string1, hILog.log());     //蓝色-blue
+			sendLogToWebSocket(string1,"DEBUG",hILog.log());
 		}
 	}
 	public  static  void  v(String string1,IfLog hILog){
 		if (mark && hILog != null) {
 			Log.v(string1, hILog.log());     //黑色-black
+			sendLogToWebSocket(string1,"INFO",hILog.log());
 		}
 	}
 	public  static  void  w(String string1,IfLog hILog){
 		if (mark && hILog != null) {
 			Log.w(string1, hILog.log());     //黄色-
+			sendLogToWebSocket(string1,"WARN",hILog.log());
 		}
 	}
 	public  static  void  first(String string1,IfLog hILog){
 		if (mark && hILog != null) {
 			Log.e(string1, hILog.log());     //Green
+			sendLogToWebSocket(string1,"ERROR",hILog.log());
 		}
 	}
 
 	public  static  void  i(IfLog hILog1,IfLog hILog){
 		if (mark && hILog != null && hILog1 != null) {
 			Log.i(hILog1.log(), hILog.log());     //Green
+			sendLogToWebSocket(hILog1.log(),"INFO",hILog.log());
 		}
 	}
 	public  static  void  e(IfLog hILog1,IfLog hILog){
 		if (mark && hILog != null && hILog1 != null) {
 			Log.e(hILog1.log(), hILog.log());     //Red
+			sendLogToWebSocket(hILog1.log(),"ERROR",hILog.log());
 		}
 	}
 	public  static  void  d(IfLog hILog1,IfLog hILog){
 		if (mark && hILog != null && hILog1 != null) {
 			Log.d(hILog1.log(), hILog.log());     //蓝色-blue
+			sendLogToWebSocket(hILog1.log(),"DEBUG",hILog.log());
 		}
 	}
 	public  static  void  v(IfLog hILog1,IfLog hILog){
 		if (mark && hILog != null && hILog1 != null) {
 			Log.v(hILog1.log(), hILog.log());     //黑色-black
+			sendLogToWebSocket(hILog1.log(),"INFO",hILog.log());
 		}
 	}
 	public  static  void  w(IfLog hILog1,IfLog hILog){
 		if (mark && hILog != null && hILog1 != null) {
 			Log.w(hILog1.log(), hILog.log());     //黄色-
+			sendLogToWebSocket(hILog1.log(),"WARN",hILog.log());
 		}
 	}
 	public  static  void  first(IfLog hILog1,IfLog hILog){
 		if (mark && hILog != null && hILog1 != null) {
 			Log.e(hILog1.log(), hILog.log());     //Green
+			sendLogToWebSocket(hILog1.log(),"ERROR",hILog.log());
 		}
 	}
 
@@ -189,57 +212,68 @@ public class ALog {
 	public  static  void  i(String i){
 		if (mark) {
 			Log.i(Tag2, i);     //Green
+			sendLogToWebSocket(Tag2,"INFO",i);
 		}
 	}
 	public  static  void  e(String string2){
 		if (mark) {
 			Log.e(Tag2, string2);     //Red
+			sendLogToWebSocket(Tag2,"ERROR",string2);
 		}
 	}
 	public  static  void  d(String string2){
 		if (mark) {
 			Log.d(Tag2, string2);     //蓝色-blue
+			sendLogToWebSocket(Tag2,"DEBUG",string2);
 		}
 	}
 	public  static  void  v(String string2){
 		if (mark) {
 			Log.v(Tag2, string2);     //黑色-black
+			sendLogToWebSocket(Tag2,"INFO",string2);
 		}
 	}
 	public  static  void  w(String string2){
 		if (mark) {
 			Log.w(Tag2, string2);     //黄色-
+			sendLogToWebSocket(Tag2,"WARN",string2);
 		}
 	}
 
 	public  static  void  i(String string1,String string2){
 		if (mark) {
 			Log.i(string1, string2);     //Green
+			sendLogToWebSocket(string1,"INFO",string2);
 		}
 	}
 	public  static  void  e(String string1,String string2){
 		if (mark) {
 			Log.e(string1, string2);     //Red
+			sendLogToWebSocket(string1,"ERROR",string2);
 		}
 	}
 	public  static  void  d(String string1,String string2){
 		if (mark) {
 			Log.d(string1, string2);     //蓝色-blue
+			sendLogToWebSocket(string1,"DEBUG",string2);
 		}
 	}
 	public  static  void  v(String string1,String string2){
 		if (mark) {
 			Log.v(string1, string2);     //黑色-black
+			sendLogToWebSocket(string1,"INFO",string2);
 		}
 	}
 	public  static  void  w(String string1,String string2){
 		if (mark) {
 			Log.w(string1, string2);     //黄色-
+			sendLogToWebSocket(string1,"WARN",string2);
 		}
 	}
 	public  static  void  first(String string1,String string2){
 		if (mark) {
 			Log.e(string1, string2);     //Green
+			sendLogToWebSocket(string1,"ERROR",string2);
 		}
 	}
 
