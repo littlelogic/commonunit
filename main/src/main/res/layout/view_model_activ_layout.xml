@@ -5,7 +5,7 @@
     <data>
 
         <import type="com.badlogic.test.TestModel"/>
-        <import type="com.badlogic.others.TestModel"  alias="TestModelB"/>s
+        <import type="com.badlogic.others.TestModel"  alias="TestModelB"/>
 
 
         <variable

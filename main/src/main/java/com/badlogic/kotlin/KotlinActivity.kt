@@ -10,15 +10,16 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.view.*
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.badlogic.ui.R
 import com.badlogic.utils.ALog
 import com.badlogic.utils.Tools
-import kotlinx.android.synthetic.main.activ_kotlin.*
 
 class KotlinActivity : Activity() {
 
@@ -92,7 +93,7 @@ class KotlinActivity : Activity() {
     }
 
     /*
-    生命属性的同时，自带getter和setter方法，即使不重写方法实现的内容，默认也有这两个方法，<属性访问器>,
+    生明属性的同时，自带getter和setter方法，即使不重写方法实现的内容，默认也有这两个方法，<属性访问器>,
     todo 所有对此变量的访问都要经此方法。实际上是调用时进行了转换
     当然也可以重写真正意义上的setter和getter方法，此时相应的<属性访问器>就会报错，他们之间只能存在一个
     在加上《private》限制后，才可以重写真正意义上的setter和getter方法，
@@ -145,19 +146,24 @@ class KotlinActivity : Activity() {
     private var markTvDr : Drawable? = null
     private var dp_5 : Int = Tools.dip2px(Tools.getApplication(), 5f)
     private var dp_8 : Int = Tools.dip2px(Tools.getApplication(), 8f)
-
+    /////-----------------
+    var topStatusbg: FrameLayout? = null;
+    var rvBar: RecyclerView? = null;
+    var rvBarRefresh: SwipeRefreshLayout = TODO();
+    var topBack: ImageView = TODO();
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         this.setContentView(R.layout.activ_kotlin)
         setStatusBarTransparent()
+        topStatusbg = this.findViewById<FrameLayout>(R.id.topStatusbg)
+        rvBar = this.findViewById(R.id.rvBar)
+        rvBarRefresh = this.findViewById(R.id.rvBarRefresh)
+        topBack = this.findViewById(R.id.topBack)
+
         initView()
         selfNameNumber = 99
         //--------
-
-
-
-
     }
 
 
@@ -230,16 +236,16 @@ class KotlinActivity : Activity() {
         val colors = intArrayOf(0xffFFCB00.toInt(), 0xffFF5500.toInt())
         val mGradientDrawable = GradientDrawable(GradientDrawable.Orientation.TL_BR, colors)
         mGradientDrawable.shape = GradientDrawable.RECTANGLE //
-        topStatusbg.background = mGradientDrawable
+        topStatusbg?.background = mGradientDrawable
         
         val statusBarHeight = Tools.getStatusBarHeight1(this)
-        topStatusbg.layoutParams.height = statusBarHeight + Tools.dip2px(this, 56F);
+        topStatusbg?.layoutParams?.height = statusBarHeight + Tools.dip2px(this, 56F);
 
         mAdapter = MAdapter(this)
         mLinearLayoutManager = LinearLayoutManager(this)
         mLinearLayoutManager?.orientation = LinearLayoutManager.VERTICAL
-        rvBar.adapter = mAdapter
-        rvBar.layoutManager = mLinearLayoutManager
+        rvBar?.adapter = mAdapter
+        rvBar?.layoutManager = mLinearLayoutManager
         rvBarRefresh.setOnRefreshListener {
             rvBarRefresh.isRefreshing = true;
             update()

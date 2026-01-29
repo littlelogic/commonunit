@@ -1,8 +1,10 @@
-apply plugin: 'com.android.application'
-
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
-//apply plugin: 'kotlin-kapt'
+//apply plugin: 'com.android.application'
+//apply plugin: 'kotlin-android'
+//apply plugin: 'kotlin-android-extensions'
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
 
 android {
     compileSdkVersion 27
@@ -76,7 +78,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     implementation 'com.android.support:recyclerview-v7:27.1.0'
     // Anko Commons
-    implementation "org.jetbrains.anko:anko-commons:$anko_version"
+//    implementation "org.jetbrains.anko:anko-commons:$anko_version"
 
     implementation project(':utils')
 }

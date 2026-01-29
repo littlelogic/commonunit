@@ -3,13 +3,13 @@ package com.teaphy.diffutildemo
 import android.os.Bundle
 import android.text.TextUtils
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.badlogic.ui.R
 import com.teaphy.diffutildemo.adapter.DiffAdapter
 import com.teaphy.diffutildemo.bean.DiffBean
 import kotlinx.android.synthetic.main.differ_activity_diff.*
-import org.jetbrains.anko.toast
 
 
 class DiffActivity : AppCompatActivity() {
@@ -53,7 +53,7 @@ class DiffActivity : AppCompatActivity() {
     private fun setListener() {
         btnAdd.setOnClickListener({
             when {
-                TextUtils.isEmpty(editName.text) -> toast(editName.hint)
+                TextUtils.isEmpty(editName.text) -> {Toast.makeText(this,editName.hint,Toast.LENGTH_SHORT).show()}
                 TextUtils.isEmpty(editDesc.text) -> toast(editDesc.hint)
                 else -> {
                     val bean = DiffBean(editName.text.toString(), editDesc.text.toString())
@@ -96,6 +96,10 @@ class DiffActivity : AppCompatActivity() {
             mAdapter.setData(newList)
         })
 
+    }
+
+    private fun toast(hint: CharSequence?) {
+        Toast.makeText(this,hint,Toast.LENGTH_SHORT).show()
     }
 
 }
