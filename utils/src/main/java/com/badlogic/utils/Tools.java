@@ -8,6 +8,7 @@ import android.app.AlertDialog;
 import android.app.Application;
 import android.app.Service;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -25,12 +26,15 @@ import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -38,7 +42,9 @@ import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.graphics.drawable.shapes.RoundRectShape;
+import android.media.ExifInterface;
 import android.media.MediaMetadataRetriever;
+import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -64,12 +70,13 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
-
+import org.apache.commons.io.IOUtils;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
 import androidx.core.app.ActivityCompat;
@@ -90,6 +97,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
@@ -2542,5 +2552,914 @@ public class Tools {
 
     //================================
 
+    public static String numFormat1(int  number) {
+        if (number >= 10000_0000) {
+            long num_yi = number / 10000_0000;
+            long num_qianWan = number % 10000_0000 / 10000_000;
+            /*int num_baiWan = number % 10000_000 / 10000_00;
+            if (num_baiWan > 5) {
+                num_qianWan += 1;
+            }*/
+            return num_yi + "."+num_qianWan+"亿";
+        } else if (number >= 10000) {
+            long num_wan = number / 10000;
+            long num_qian = number % 10000 / 1000;
+            return num_wan + "."+num_qian+"万";
+        } else {
+            return String.valueOf(number);
+        }
+    }
+
+    public static String numFormat2(int  number) {
+        if (number >= 10_0000) {
+            return "99k";
+        } else if (number >= 1000) {
+            // 对于1000-9999的数字，也保留一位小数
+            float num_k = number / 1000.0f;
+            return String.format("%.1fk", num_k);
+        } else {
+            return String.valueOf(number);
+        }
+    }
+
+    public static String decode(String  text) {
+        if (text == null) {
+            return "";
+        }
+        try {
+            return URLDecoder.decode(text, "UTF-8");
+        } catch (Exception e) {
+            return text;
+        }
+    }
+
+    public static String getPackageName(Context context) {
+        try {
+            PackageManager packageManager = context.getPackageManager();
+            PackageInfo packageInfo = packageManager.getPackageInfo(
+                    context.getPackageName(), 0);
+            ALog.d("wjw02", "MediaApplication-onCreate-packageInfo.packageName->" + packageInfo.packageName);
+            return packageInfo.packageName;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    public static int alphaColor(int color, float alpha) {
+        return (color & 0x00ffffff) | ((int)(255 * alpha)) << 24;
+    }
+
+    public static Drawable getCornerDrawable(int color1, int color2, int radius, int widthStroke, int colorStroke) {
+        return getCornerDrawable(color1,color2,(float)radius,widthStroke,colorStroke);
+    }
+    public static Drawable getCornerDrawable(int color1, int color2, float radius, int widthStroke, int colorStroke) {
+        int colors[] = {color1, color2};
+        GradientDrawable mGradientDrawable = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, colors);
+        mGradientDrawable.setShape(GradientDrawable.RECTANGLE);//
+       /* float[] radius_arr = {radius,radius,radius,radius,radius,radius,radius,radius};
+        mGradientDrawable.setCornerRadii(radius_arr);*/
+        mGradientDrawable.setCornerRadius(radius);
+        mGradientDrawable.setStroke(widthStroke, colorStroke);
+        mGradientDrawable.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+        return mGradientDrawable;
+    }
+
+    public static Drawable getCornerDrawable(GradientDrawable.Orientation lOrientation, int color1, int color2,
+                                             float radius, int widthStroke, int colorStroke) {
+        int colors[] = {color1, color2};
+        GradientDrawable mGradientDrawable = new GradientDrawable(lOrientation, colors);
+        mGradientDrawable.setShape(GradientDrawable.RECTANGLE);//
+       /* float[] radius_arr = {radius,radius,radius,radius,radius,radius,radius,radius};
+        mGradientDrawable.setCornerRadii(radius_arr);*/
+        mGradientDrawable.setCornerRadius(radius);
+        mGradientDrawable.setStroke(widthStroke, colorStroke);
+        mGradientDrawable.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+        return mGradientDrawable;
+    }
+
+    public static Drawable getCornerDrawable(GradientDrawable.Orientation lOrientation, int colors[],
+                                             float radius, int widthStroke, int colorStroke) {
+        GradientDrawable mGradientDrawable = new GradientDrawable(lOrientation, colors);
+        mGradientDrawable.setShape(GradientDrawable.RECTANGLE);//
+       /* float[] radius_arr = {radius,radius,radius,radius,radius,radius,radius,radius};
+        mGradientDrawable.setCornerRadii(radius_arr);*/
+        mGradientDrawable.setCornerRadius(radius);
+        mGradientDrawable.setStroke(widthStroke, colorStroke);
+        mGradientDrawable.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+        return mGradientDrawable;
+    }
+
+    public static Bitmap getBitmapFrom_sd_JustSize(String path, final int maxEdge){
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(path,options);
+        final int width_origi = options.outWidth;
+        final int height_origi = options.outHeight;
+        int width_new,height_new;
+        if (width_origi > height_origi) {
+            width_new = width_origi;
+            if (width_new > maxEdge) {
+                width_new = maxEdge;
+            }
+            height_new = (int)(width_new * (height_origi/(float)width_origi));
+        } else {
+            height_new = height_origi;
+            if (height_origi > maxEdge) {
+                height_new = maxEdge;
+            }
+            width_new = (int)(height_new * (width_origi/(float)height_origi));
+        }
+        // 调用上面定义的方法计算inSampleSize值
+        options.inSampleSize = calculateInSampleSize(options, width_new, height_new);
+        // 使用获取到的inSampleSize值再次解析图片
+        options.inJustDecodeBounds = false;
+        Bitmap srcBmp = BitmapFactory.decodeFile(path,options);
+
+        boolean rotate = false;
+        int rotate_value = 0;
+        try {
+            ExifInterface exifInterface = new ExifInterface(path);
+            int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL);
+            ALog.i(ALog.Tag2, "LightVideoHelper-optimizeBitmapFromPath-orientation->" + orientation);
+            if (ExifInterface.ORIENTATION_ROTATE_90 == orientation) {
+                ALog.i(ALog.Tag2, "LightVideoHelper-optimizeBitmapFromPath-ORIENTATION_ROTATE_90->");
+                rotate_value = 90;
+                rotate = true;
+            } else if (ExifInterface.ORIENTATION_ROTATE_270 == orientation) {
+                ALog.i(ALog.Tag2, "LightVideoHelper-optimizeBitmapFromPath-ORIENTATION_ROTATE_270->");
+                rotate_value = 270;
+                rotate = true;
+            } else if (ExifInterface.ORIENTATION_ROTATE_180 == orientation) {
+                rotate_value = 180;
+            } else {
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (rotate_value == 0) {
+            return srcBmp;
+        }
+
+        Bitmap newBitmap = Bitmap.createBitmap(srcBmp.getWidth(), srcBmp.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas mCanvas = new Canvas(newBitmap);
+        mCanvas.drawBitmap(srcBmp, 0, 0, null);
+
+        Matrix mMatrix = new Matrix();
+        mMatrix.setRotate(rotate_value, newBitmap.getWidth() / 2, newBitmap.getHeight() / 2);
+        Bitmap finalBmp = Bitmap.createBitmap(newBitmap, 0, 0, newBitmap.getWidth(), newBitmap.getHeight(), mMatrix, false);
+
+        return finalBmp;
+    }
+
+    public static boolean checkBitmapFileSize(String path_old, String path_new,final int maxEdge){
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(path_old,options);
+        final int width_origi = options.outWidth;
+        final int height_origi = options.outHeight;
+        int width_new,height_new;
+        if (width_origi > height_origi) {
+            width_new = width_origi;
+            if (width_new > maxEdge) {
+                width_new = maxEdge;
+            } else {
+                return false;
+            }
+            height_new = (int)(width_new * (height_origi/(float)width_origi));
+        } else {
+            height_new = height_origi;
+            if (height_new > maxEdge) {
+                height_new = maxEdge;
+            } else {
+                return false;
+            }
+            width_new = (int)(height_new * (width_origi/(float)height_origi));
+        }
+        // 调用上面定义的方法计算inSampleSize值
+        options.inSampleSize = calculateInSampleSize(options, width_new, height_new);
+        // 使用获取到的inSampleSize值再次解析图片
+        options.inJustDecodeBounds = false;
+        Bitmap srcBmp = BitmapFactory.decodeFile(path_old,options);
+
+        boolean rotate = false;
+        int rotate_value = 0;
+        try {
+            ExifInterface exifInterface = new ExifInterface(path_old);
+            int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL);
+            ALog.i(ALog.Tag2, "LightVideoHelper-optimizeBitmapFromPath-orientation->" + orientation);
+            if (ExifInterface.ORIENTATION_ROTATE_90 == orientation) {
+                ALog.i(ALog.Tag2, "LightVideoHelper-optimizeBitmapFromPath-ORIENTATION_ROTATE_90->");
+                rotate_value = 90;
+                rotate = true;
+            } else if (ExifInterface.ORIENTATION_ROTATE_270 == orientation) {
+                ALog.i(ALog.Tag2, "LightVideoHelper-optimizeBitmapFromPath-ORIENTATION_ROTATE_270->");
+                rotate_value = 270;
+                rotate = true;
+            } else if (ExifInterface.ORIENTATION_ROTATE_180 == orientation) {
+                rotate_value = 180;
+            } else {
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (rotate_value == 0) {
+            Tools.saveBitmapAsPng(srcBmp,90,path_new);
+            return true;
+        }
+
+        Bitmap newBitmap = Bitmap.createBitmap(srcBmp.getWidth(), srcBmp.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas mCanvas = new Canvas(newBitmap);
+        mCanvas.drawBitmap(srcBmp, 0, 0, null);
+
+        Matrix mMatrix = new Matrix();
+        mMatrix.setRotate(rotate_value, newBitmap.getWidth() / 2, newBitmap.getHeight() / 2);
+        Bitmap finalBmp = Bitmap.createBitmap(newBitmap, 0, 0, newBitmap.getWidth(), newBitmap.getHeight(), mMatrix, false);
+
+        Tools.saveBitmapAsPng(finalBmp,90,path_new);
+        return true;
+    }
+
+    public static boolean checkBitmapFileSize(String path, final int minEdge, final int maxEdge, final int maxSize, final float maxRatio){
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(path,options);
+        final int width_origi = options.outWidth;
+        final int height_origi = options.outHeight;
+        if (height_origi <= 0 || width_origi <= 0) {
+            return false;
+        } else if (height_origi > maxEdge || width_origi > maxEdge) {
+            return false;
+        } else if (height_origi < minEdge || width_origi < minEdge) {
+            return false;
+        }
+        float per_BigW_h = 1f;
+        if (width_origi > height_origi) {
+            per_BigW_h = width_origi / (float)height_origi;
+            if (per_BigW_h > 3f) {
+                return false;
+            }
+        } else {
+            per_BigW_h = height_origi / (float)width_origi;
+            if (per_BigW_h > 3f) {
+                return false;
+            }
+        }
+
+        File inputFile = new File(path);
+        if (inputFile.length() > maxSize) {
+            return false;
+        }
+        return true;
+    }
+
+    private static int calculateInSampleSize(BitmapFactory.Options options,
+                                             int reqWidth, int reqHeight) {
+        // 源图片的高度和宽度
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+        if (height > reqHeight || width > reqWidth) {
+            // 计算出实际宽高和目标宽高的比率
+            final int heightRatio = Math.round((float) height / (float) reqHeight);
+            final int widthRatio = Math.round((float) width / (float) reqWidth);
+            // 选择宽和高中最小的比率作为inSampleSize的值，这样可以保证最终图片的宽和高
+            // 一定都会大于等于目标的宽和高。
+            inSampleSize = heightRatio < widthRatio ? heightRatio : widthRatio;
+        }
+        return inSampleSize;
+    }
+
+    public static boolean saveBitmapAsPng(Bitmap bmp,int quality, File f) {
+        /*try {
+            FileOutputStream out = new FileOutputStream(f);
+            bmp.compress(Bitmap.CompressFormat.PNG, quality, out);
+            out.flush();
+            out.close();
+            return true;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            bmp.recycle();
+            bmp = null;
+        }
+        return false;*/
+        return saveBitmapAsPng(bmp,quality,f,false);
+    }
+
+    public static boolean saveBitmapAsPng(Bitmap bmp,int quality, File f,boolean isRecycle) {
+        try {
+            FileOutputStream out = new FileOutputStream(f);
+            bmp.compress(Bitmap.CompressFormat.PNG, quality, out);
+            out.flush();
+            out.close();
+            return true;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (isRecycle) {
+                bmp.recycle();
+                bmp = null;
+            }
+        }
+        return false;
+    }
+
+    public static boolean saveBitmapAsJpeg(Bitmap bmp,int quality, File f) {
+        try {
+            FileOutputStream out = new FileOutputStream(f);
+            bmp.compress(Bitmap.CompressFormat.JPEG, quality, out);
+            out.flush();
+            out.close();
+            return true;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            bmp.recycle();
+            bmp = null;
+        }
+        return false;
+    }
+
+    public static boolean saveBitmapAsJpeg(Bitmap bmp, int quality,String path) {
+        try {
+            File hFile = new  File(path);
+            if (!hFile.exists()) {
+                hFile.getParentFile().mkdirs();
+                hFile.createNewFile();
+            } else {
+                if (hFile.isDirectory()) {
+                    /*hFile.delete();
+                    hFile.createNewFile();*/
+                    return false;
+                }
+            }
+            return saveBitmapAsJpeg(bmp,quality,hFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static boolean saveBitmapAsPng(Bitmap bmp,int quality, String path) {
+        try {
+            File hFile = new  File(path);
+            if (!hFile.exists()) {
+                hFile.getParentFile().mkdirs();
+                hFile.createNewFile();
+            } else {
+                if (hFile.isDirectory()) {
+                    return false;
+                }
+            }
+            return saveBitmapAsPng(bmp,quality,hFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static Uri insertVideoToMediaStore(Context context, String filePath, long createTime, long duration) {
+        if (context == null) {
+            context = Tools.getApplication();
+        }
+
+        File file = new File(filePath);
+        if (!file.exists() || !file.isFile()) {
+            Log.e("MediaStore", "File not found: " + filePath);
+            return null;
+        }
+        ContentResolver resolver = context.getContentResolver();
+        ContentValues values = new ContentValues();
+
+        // 设置通用元数据
+        values.put(MediaStore.Video.Media.DISPLAY_NAME, file.getName());
+        values.put(MediaStore.Video.Media.DATE_ADDED, System.currentTimeMillis() / 1000);
+        values.put(MediaStore.Video.Media.DATE_MODIFIED, System.currentTimeMillis() / 1000);
+        values.put(MediaStore.Video.Media.SIZE, file.length());
+
+        // 设置传入的参数
+        if (createTime > 0) {
+            values.put(MediaStore.Video.Media.DATE_TAKEN, createTime);
+        }
+        if (duration > 0) {
+            values.put(MediaStore.Video.Media.DURATION, duration);
+        }
+        // 版本兼容处理
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // Android 10+ 使用 RELATIVE_PATH
+            values.put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES);
+        } else {
+            // 旧版本使用 DATA 字段
+            values.put(MediaStore.Video.Media.DATA, filePath);
+        }
+        // 插入媒体库
+        Uri uri = null;
+        try {
+            uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
+
+            if (uri != null) {
+                // 对于 Android 10 以下，需要额外触发媒体扫描
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                    context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)));
+                }
+            } else {
+                Log.e("MediaStore", "Failed to insert video entry");
+            }
+        } catch (Exception e) {
+            Log.e("MediaStore", "Error inserting video: " + e.getMessage());
+            // 回滚：删除可能创建的部分条目
+            if (uri != null) {
+                resolver.delete(uri, null, null);
+            }
+        }
+        return uri;
+    }
+
+    public static void insertImageToMediaStore(Context context, String filePath, long createTime) {
+        insertImageToMediaStore(context, filePath, createTime, 0, 0);
+    }
+
+    public static void insertImageToMediaStore(Context context, String filePath, long createTime, int width, int height) {
+        if (!checkFile(filePath))
+            return;
+
+        if (context == null) {
+            context = Tools.getApplication();
+        }
+
+        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        intent.setData(Uri.fromFile(new File(filePath)));
+        context.sendBroadcast(intent);
+    }
+
+    // 检测文件存在
+    private static boolean checkFile(String filePath) {
+        File file = new File(filePath);
+        boolean result = file.exists();
+        ////boolean result = FileUtil.existFile(filePath);
+        if (!result) {
+//            XLog.error("www", "文件不存在 path = " + filePath);
+        }
+        return result;
+    }
+
+
+    public static boolean isWjwPhone() {
+        if (Tools.getApplication() == null) {
+            return false;
+        }
+        if (Tools.isApkDebugable(Tools.getApplication().getBaseContext())) {
+            try {
+                File hFile = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/11/lib.yuv");
+                if (hFile.exists()) {
+                    return true;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    /*
+      配合使用      android:clickable="true"
+        android:focusable="true"
+   */
+    public static StateListDrawable getSelectorDrawable(Drawable normalDr, Drawable selectDr) {
+        StateListDrawable bg = new StateListDrawable();
+        bg.addState(new int[]{android.R.attr.state_selected}, selectDr);
+        // View.EMPTY_STATE_SET--没有任何状态时显示的图片，我们给它设置我空集合
+        bg.addState(new int[]{},normalDr);
+        return bg;
+    }
+
+    /*
+          配合使用      android:clickable="true"
+            android:focusable="true"
+     */
+    public static StateListDrawable getPressDrawable(Drawable normalDr, Drawable pressedDr) {
+        StateListDrawable bg = new StateListDrawable();
+        bg.addState(new int[]{android.R.attr.state_pressed}, pressedDr);
+        // View.EMPTY_STATE_SET--没有任何状态时显示的图片，我们给它设置我空集合
+        bg.addState(new int[]{},normalDr);
+        return bg;
+    }
+
+    public static StateListDrawable getPressDrawable(Drawable normalDr, Drawable pressedDr,Drawable selectDr) {
+        StateListDrawable bg = new StateListDrawable();
+        bg.addState(new int[]{android.R.attr.state_selected}, selectDr);
+        bg.addState(new int[]{android.R.attr.state_pressed}, pressedDr);
+        // View.EMPTY_STATE_SET--没有任何状态时显示的图片，我们给它设置我空集合
+        bg.addState(new int[]{},normalDr);
+        return bg;
+    }
+
+    ////================================================
+
+    public static File getCompressImage(String inputFilePath, int limitSize,boolean needAdjustRotation) {
+        ///int limitKb = 10 * 1024;
+        int limitKb = limitSize / 1024;
+        File inputFile = new File(inputFilePath);
+        if (inputFile.exists()) {
+            if (inputFile.length() / 1024 < limitKb) {
+                if (needAdjustRotation) {
+                    try {
+                        Bitmap bitmap = BitmapFactory.decodeFile(inputFilePath);
+                        int rotate = readPictureDegree(inputFilePath);
+                        if (rotate == 0) {
+                            return inputFile;
+                        } else {
+                            bitmap = adjustRotation(bitmap, inputFilePath);
+                            String outputFilePath = generateCompressedPath(inputFilePath);
+                            try (FileOutputStream fileOutputStream = new FileOutputStream(outputFilePath)) {
+                                boolean success = bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream);
+                                if (success) {
+                                    return new File(outputFilePath);
+                                } else {
+                                    return inputFile;
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return inputFile;
+                    }
+                }
+                return inputFile;
+            }
+        } else {
+            return inputFile;
+        }
+        //对于大图片，先进行分辨率压缩（最耗时间），之后方向调转，最后质量压缩。
+        String outputFilePath = generateCompressedPath(inputFilePath);
+        try {
+            // 读取图片
+            Bitmap bitmap = decodeHugeImage(inputFilePath);
+            // 调整分辨率
+            bitmap = resizeBitmap(bitmap, 10000, 10000);
+            //调整角度
+            if (needAdjustRotation) {
+                bitmap = adjustRotation(bitmap, inputFilePath);
+            }
+            // 压缩质量
+            int quality = 90;
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
+            // 循环压缩到符合大小
+            while (outputStream.size() / 1024 > limitKb && quality > 10) {
+                quality -= 5;
+                outputStream.reset();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
+            }
+            // 写入压缩后的图片到输出文件
+            File outFile = new File(outputFilePath);
+            OutputStream fos = new FileOutputStream(outFile);
+            fos.write(outputStream.toByteArray());
+            fos.flush();
+            fos.close();
+            return outFile; // 压缩成功
+        } catch (Exception e) {
+            e.printStackTrace();
+            return inputFile; // 压缩失败
+        }
+    }
+
+    private static Bitmap resizeBitmap(Bitmap bitmap, int maxWidth, int maxHeight) {
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        float aspectRatio = (float) width / height;
+
+        if (width > maxWidth || height > maxHeight) {
+            if (aspectRatio > 1) {
+                // 宽度优先缩放
+                int scaledHeight = (int) (maxWidth / aspectRatio);
+                return Bitmap.createScaledBitmap(bitmap, maxWidth, scaledHeight, true);
+            } else {
+                // 高度优先缩放
+                int scaledWidth = (int) (maxHeight * aspectRatio);
+                return Bitmap.createScaledBitmap(bitmap, scaledWidth, maxHeight, true);
+            }
+        } else {
+            return bitmap; // 不需要缩放
+        }
+    }
+
+    public static String generateCompressedPath(String originalPath) {
+        File file = new File(originalPath);
+        String parentDir = file.getParent(); // 获取文件所在目录
+        if (parentDir == null) {
+            parentDir = "/"; // 如果没有父目录，默认为根目录
+        }
+
+        String fileName = file.getName();
+        String extension = "jpg"; // 默认扩展名
+        String baseName = fileName; // 基础文件名
+
+        // 安全地提取文件名和扩展名
+        int lastDotIndex = fileName.lastIndexOf(".");
+        if (lastDotIndex > 0 && lastDotIndex < fileName.length() - 1) {
+            // 确保点号不是在开头也不是在结尾，并且扩展名不为空
+            String nameWithoutExtension = fileName.substring(0, lastDotIndex);
+            String fileExtension = fileName.substring(lastDotIndex + 1);
+            if (fileExtension != null && !fileExtension.isEmpty()) {
+                baseName = nameWithoutExtension;
+                extension = fileExtension;
+            }
+        }
+
+        // 生成新的文件名
+        String newFileName = baseName + "_compress." + extension;
+
+        // 拼接新的完整路径
+        return parentDir + "/" + newFileName;
+    }
+
+    public static boolean saveImageToGallery(Context context, Bitmap bitmap, String title) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // 使用现代 MediaStore 方法
+            return saveImageToGalleryModern(context, bitmap, title);
+        } else {
+            // 使用旧的 insertImage 方法
+            String savedUri = MediaStore.Images.Media.insertImage(
+                    context.getContentResolver(), bitmap, title, null
+            );
+            return savedUri != null;
+        }
+    }
+
+    private static boolean saveImageToGalleryModern(Context context, Bitmap bitmap, String title) {
+        ContentResolver resolver = context.getContentResolver();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, title + ".jpg");
+        contentValues.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+        contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES);
+        contentValues.put(MediaStore.Images.Media.IS_PENDING, 1);
+
+        Uri uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+        if (uri == null) {
+            return false;
+        }
+
+        try {
+            OutputStream outputStream = resolver.openOutputStream(uri);
+            if (outputStream != null) {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+                outputStream.close();
+            }
+            contentValues.clear();
+            contentValues.put(MediaStore.Images.Media.IS_PENDING, 0);
+            resolver.update(uri, contentValues, null, null);
+            return true;
+        } catch (Exception e) {
+            resolver.delete(uri, null, null); // 删除失败的文件
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static Bitmap decodeHugeImage(String path) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(path, options);
+        int reqH = 10000;
+        int reqW = 10000;
+        float ratio = options.outWidth * 1f / Math.max(1, options.outHeight);
+        if (ratio > 0.5f && ratio < 2f) {
+            reqH = 2000;
+            reqW = 2000;
+        }
+        options.inSampleSize = calculateInSampleSize(options, reqW, reqH);
+        options.inJustDecodeBounds = false;
+        Log.i("BitmapUtil", "decodeHugeImage: inSampleSize=" + options.inSampleSize
+                + ", w0=" + options.outWidth + ", h0=" + options.outHeight);
+        return BitmapFactory.decodeFile(path, options);
+    }
+
+    public static Bitmap adjustRotation(Bitmap bitmap, String path) {
+        int rotate = readPictureDegree(path);
+        if (rotate == 0) {
+            return bitmap;
+        }
+        Matrix matrix = new Matrix();
+        //set会重置，post是基于修改后再修改，由于是上传文件前的压缩，所以无所谓set还是post了
+        matrix.setRotate(rotate);
+
+//        matrix.postRotate(rotate_value);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+    }
+
+    public static int readPictureDegree(String path) {
+        int degree = 0;
+        try {
+            final androidx.exifinterface.media.ExifInterface exifInterface = new androidx.exifinterface.media.ExifInterface(path);
+            final int orientation =
+                    exifInterface.getAttributeInt(androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
+                            androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL);
+            switch (orientation) {
+                case androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_90:
+                    degree = 90;
+                    break;
+                case androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_180:
+                    degree = 180;
+                    break;
+                case androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_270:
+                    degree = 270;
+                    break;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return degree;
+    }
+
+    ////================================================
+
+    public static void setStatusBarTransparent(Activity activity, Integer navigationBarColor) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Window window = activity.getWindow();
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(Color.TRANSPARENT);
+            if (navigationBarColor != null) {
+                window.setNavigationBarColor(navigationBarColor);
+            }
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                activity.getWindow().setStatusBarColor(0xFF_FF_CB_00);
+            }
+        }
+    }
+
+    public static void setStatusBarTransparent(Activity activity) {
+        setStatusBarTransparent(activity,null);
+    }
+
+    public static String convertImageFormat(String inputPath, String outputPath) {
+        // 加载原始图片
+        Bitmap bitmap = BitmapFactory.decodeFile(inputPath);
+        // 创建输出流
+        if (bitmap != null) {
+            try (FileOutputStream out = new FileOutputStream(outputPath)) {
+                // 将图片压缩并写入输出流
+                boolean success = bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                if (success) {
+                    return outputPath;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return "";
+    }
+
+    ////================================================
+
+    public static ShapeDrawable createFrameDrawable(final int[] colors, float radius, float strokeWidth) {
+        float[] outerR = {radius, radius, radius, radius, radius, radius, radius, radius};
+        // 内部矩形与外部矩形的距离
+        RectF inset = new RectF(strokeWidth, strokeWidth, strokeWidth, strokeWidth);
+        // 内部矩形弧度
+        float innerRadius = radius - strokeWidth;
+        float[] innerRadii = {innerRadius, innerRadius, innerRadius, innerRadius, innerRadius, innerRadius, innerRadius, innerRadius};
+        RoundRectShape rr = new RoundRectShape(outerR, inset, innerRadii);
+        ShapeDrawable.ShaderFactory shaderFactory = new ShapeDrawable.ShaderFactory() {
+            @Override
+            public Shader resize(int width, int height) {
+                ///LinearGradient lLinearGradient =  new LinearGradient(0f, 0f, width, height, colors, null, Shader.TileMode.CLAMP);
+                // (0f, 0f, width, 0)  这四个参数控制的是方向
+                LinearGradient lLinearGradient =  new LinearGradient(0f, 0f, width, 0, colors, null, Shader.TileMode.CLAMP);
+                return lLinearGradient;
+            }
+        };
+        ShapeDrawable shapeDrawable = new ShapeDrawable(rr);
+        shapeDrawable.setShaderFactory(shaderFactory);
+        return shapeDrawable;
+    }
+
+
+
+    public static void copyWithTimeout(String urlString, String outputPath, int timeout) throws Exception {
+        copyWithTimeout(urlString,new File(outputPath),timeout);
+    }
+
+    public static void copyWithTimeout(String urlString, File outputFile, int timeout) throws Exception {
+        URL url = new URL(urlString);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setConnectTimeout(timeout); // 设置连接超时时间
+        connection.setReadTimeout(timeout); // 设置读取超时时间
+        connection.connect();
+
+        FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
+        try (InputStream inputStream = connection.getInputStream()) {
+            IOUtils.copy(inputStream, fileOutputStream);
+        } finally {
+            connection.disconnect();
+        }
+    }
+
+    public static void loadFile(String urlString, String outputPath) throws Exception {
+        URL lURL = new URL(urlString);
+        IOUtils.copy(lURL, new File(outputPath));
+    }
+
+    public static boolean loadFile(String urlString, String outputFile, int timeout)  {
+        URLConFileDownloader fileDownloader = new URLConFileDownloader(timeout,timeout);
+        return fileDownloader.downloadFile(urlString,new File(outputFile),null);
+    }
+
+    public static boolean loadFile(String urlString, File outputFile, int timeout)  {
+        URLConFileDownloader fileDownloader = new URLConFileDownloader(timeout,timeout);
+        return fileDownloader.downloadFile(urlString,outputFile,null);
+    }
+    public static boolean loadFile(String urlString, File outputFile, int timeout, URLDownloadCallback downloadCallback) {
+        URLConFileDownloader fileDownloader = new URLConFileDownloader(timeout,timeout);
+        return fileDownloader.downloadFile(urlString,outputFile,downloadCallback);
+    }
+
+    public static boolean loadFile(String urlString, File outputFile,  int timeout, Boolean syncExecute, URLDownloadCallback downloadCallback) {
+        URLConFileDownloader fileDownloader = new URLConFileDownloader(timeout,timeout);
+        return fileDownloader.downloadFile(urlString,outputFile,true,syncExecute,downloadCallback);
+    }
+
+
+    public static boolean isAlipayInstalled(Context context) {
+        try {
+            context.getPackageManager()
+                    .getPackageInfo("com.eg.android.AlipayGphone", 0);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static boolean isWeChatInstalled(Context context) {
+        try {
+            context.getPackageManager()
+                    .getPackageInfo("com.tencent.mm", 0);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+
+    /**
+     * 用这个方法准确点
+     * 获取视频/音频时长,这里获取的是毫秒
+     */
+    public static long getVideoOrAudioDuration(String path){
+        MediaPlayer mediaPlayer = null;
+        try {
+            mediaPlayer = new MediaPlayer();
+            mediaPlayer.setDataSource(path);
+            mediaPlayer.prepare();
+            int duration = mediaPlayer.getDuration();
+            mediaPlayer.release();
+            return duration;
+        } catch (Exception e) {
+            e.printStackTrace();
+            try {
+                if (mediaPlayer != null) {
+                    mediaPlayer.release();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        return 0;
+    }
+
+    public static long getVideoOrAudioDuration(Context context, Uri uri){
+        MediaPlayer mediaPlayer = null;
+        try {
+            mediaPlayer = new MediaPlayer();
+            mediaPlayer.setDataSource(context,uri);
+            mediaPlayer.prepare();
+            int duration = mediaPlayer.getDuration();
+            mediaPlayer.release();
+            return duration;
+        } catch (Exception e) {
+            e.printStackTrace();
+            try {
+                if (mediaPlayer != null) {
+                    mediaPlayer.release();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        return 0;
+    }
 
 }

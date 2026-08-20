@@ -3,17 +3,13 @@ package com.badlogic.utils;
 import android.content.Context;
 import android.util.Log;
 
-import com.badlogic.socket.LogWebSocketHelper;
-import com.badlogic.socket.LogWebSocketService;
-
-import java.lang.reflect.InvocationTargetException;
-
 public class ALog {
 
 	public static boolean mark = false;
 	public static boolean i = false;
 	public static boolean l = false;
 	public static Boolean d = null;
+	public static Boolean r = null;
 
 	public static final String _b = "";
 	public static boolean _i = true;
@@ -39,20 +35,22 @@ public class ALog {
 		_i = _1 = _$ = _￥ = mark;
 		if (mark_) {
 			d = true;
+			r = null;
 		} else {
 			d = null;
+			r = true;
 		}
 
         try {
-            Class<?> clazz = Class.forName("com.badlogic.socket.LogWebSocketHelper");
-            Object instance = clazz.getDeclaredConstructor().newInstance();
-			logSocketIntf = (LogSocketIntf) instance;
+            Class<?> holderClass = Class.forName("com.badlogic.socket.LogWebSocketHelper$SingletonHolder");
+            java.lang.reflect.Field field = holderClass.getDeclaredField("instance");
+            field.setAccessible(true);
+            logSocketIntf = (LogSocketIntf) field.get(null);
         } catch (Exception e) {
 			e.printStackTrace();
         }
 
     }
-
 
 
 	private static Context appContext;

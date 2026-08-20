@@ -2,7 +2,6 @@ package com.badlogic.utils;
 
 import android.content.Context;
 
-import com.badlogic.socket.LogWebSocketHelper;
 
 public interface LogSocketIntf {
 
