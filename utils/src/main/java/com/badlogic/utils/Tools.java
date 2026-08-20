@@ -3419,4 +3419,336 @@ public class Tools {
         return 0;
     }
 
+
+
+
+    //flie：要删除的文件夹的所在位置
+    public static void deleteFile(File file) {
+        if (file.isDirectory()) {
+            File[] files = file.listFiles();
+            for (int i = 0; i < files.length; i++) {
+                File f = files[i];
+                deleteFile(f);
+            }
+            file.delete();//如要保留文件夹，只删除文件，请注释这行
+        } else if (file.exists()) {
+            file.delete();
+        }
+    }
+
+
+    public static File createFileAndDirectory(String path){
+        try {
+            File nFile = new File(path);
+            if (nFile.exists()) {
+                nFile.delete();
+            }
+            ///-----
+            nFile = new File(path);
+            nFile.getParentFile().mkdirs();
+//            nFile.mkdirs();
+            nFile.createNewFile();
+            return nFile;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    ///============
+
+    public static String getVersionName(Context context) {
+        try {
+            PackageManager manager = context.getPackageManager();
+            PackageInfo info = manager.getPackageInfo(context.getPackageName(),
+                    0);
+            String version = info.versionName;
+            return version;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    public static int getVersionCode(Context context) {
+        try {
+            PackageManager manager = context.getPackageManager();
+            PackageInfo info = manager.getPackageInfo(context.getPackageName(),
+                    0);
+            int version = info.versionCode;
+            return version;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    public static String postfix(String fileName){
+        String prefix = fileName.substring(fileName.lastIndexOf(".") + 1);
+        return prefix;
+    }
+
+    public static boolean ablePlayFrontDebugableColor(Context context) {
+       /* String szImei = "";
+        try {
+            TelephonyManager TelephonyMgr = (TelephonyManager) context.getSystemService(TELEPHONY_SERVICE);
+            if (ActivityCompat.checkSelfPermission(GifApplication.getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+            } else {
+                szImei = TelephonyMgr.getDeviceId();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        ALog.i(ALog.Tag2, "PlayerLayoutControler-isApkDebugableAndMePhone-szImei-->" + szImei);
+        boolean b = Tools.isApkDebugable(context) && "866049038663696".equals(szImei);
+
+        if (Tools.isApkDebugable()) {
+            boolean b1 = Bizflow.instance().option().value("player.debug.background_visible", "0").equals("1");
+            b = b || b1;
+        }*/
+        return false;
+    }
+
+    public static boolean isApkDebugableAndMePhone(Context hContext) {
+        if (hContext == null) {
+            return false;
+        }
+        if (Tools.isApkDebugable(hContext)) {
+            try {
+                File hFile = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/11/lib.yuv");
+                if (hFile.exists()) {
+                    return true;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    public static boolean isApkDebugableAndMePhone() {
+        if (Tools.getApplication() == null) {
+            return false;
+        }
+        if (Tools.isApkDebugable(Tools.getApplication().getBaseContext())) {
+            try {
+                File hFile = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/11/lib.yuv");
+                if (hFile.exists()) {
+                    return true;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    ///============================================================
+
+
+    public static boolean saveBitmap(Bitmap bmp, Bitmap.CompressFormat format,int quality, String path) {
+        try {
+            File hFile = new  File(path);
+            if (!hFile.exists()) {
+                hFile.getParentFile().mkdirs();
+                hFile.createNewFile();
+            } else {
+                if (hFile.isDirectory()) {
+                    /*hFile.delete();
+                    hFile.createNewFile();*/
+                    return false;
+                }
+            }
+            if (quality > 100) {
+                quality = 100;
+            } else if (quality < 0) {
+                quality = 0;
+            }
+            FileOutputStream out = new FileOutputStream(hFile);
+            bmp.compress(format, quality, out);
+            out.flush();
+            out.close();
+            return true;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            bmp.recycle();
+            bmp = null;
+        }
+        return false;
+    }
+
+    /**
+     * @Description: 通过JNI图片压缩把Bitmap保存到指定目录
+     * @param curFilePath
+     *            当前图片文件地址
+     * @param targetFilePath
+     *            要保存的图片文件地址
+     */
+    public static void compressBitmap(String curFilePath, String targetFilePath) {
+        // 最大图片大小 500KB
+        int maxSize = 500;
+        //根据地址获取bitmap
+        Bitmap result = Tools.getBitmapFrom_sd(curFilePath);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        // 质量压缩方法，这里100表示不压缩，把压缩后的数据存放到baos中
+        int quality = 100;
+        result.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+        // 循环判断如果压缩后图片是否大于500kb,大于继续压缩
+        while (baos.toByteArray().length / 1024 > maxSize) {
+            // 重置baos即清空baos
+            baos.reset();
+            // 每次都减少10
+            quality -= 10;
+            // 这里压缩quality，把压缩后的数据存放到baos中
+            result.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+        }
+        // JNI保存图片到SD卡 这个关键
+//        NativeUtil.saveBitmap(result, quality, targetFilePath, true);
+        // 释放Bitmap
+        if (!result.isRecycled()) {
+            result.recycle();
+        }
+
+    }
+
+
+    ///============================================================
+    public static void hideSoftInput(Activity mContext){
+        ((InputMethodManager)mContext.getSystemService(Context.INPUT_METHOD_SERVICE))
+                .hideSoftInputFromWindow(mContext.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+    }
+
+    ///============================================================
+
+    private static void copyFileUsingFileStreams(File source, File dest)
+            throws IOException {
+        InputStream input = null;
+        OutputStream output = null;
+        try {
+            input = new FileInputStream(source);
+            output = new FileOutputStream(dest);
+            byte[] buf = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = input.read(buf)) > 0) {
+                output.write(buf, 0, bytesRead);
+            }
+        } finally {
+            input.close();
+            output.close();
+        }
+    }
+
+    ///-Java NIO包括transferFrom方法,根据文档应该比文件流复制的速度更快
+    public static void copyFileUsingFileChannels(File source, File dest) throws IOException {
+        FileChannel inputChannel = null;
+        FileChannel outputChannel = null;
+        try {
+            inputChannel = new FileInputStream(source).getChannel();
+            outputChannel = new FileOutputStream(dest).getChannel();
+            outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
+        } finally {
+            inputChannel.close();
+            outputChannel.close();
+        }
+    }
+
+
+    /*@RequiresApi(api = Build.VERSION_CODES.O)
+    private static void copyFileUsingJava7Files(File source, File dest)
+            throws IOException {
+        Files.copy(source.toPath(), dest.toPath());
+    }*/
+
+
+
+    ///============================================================
+
+    public static LinearGradient newLinearGradient(
+            int width, int height, int[] color_LinearGradient,
+            float[] positions_LinearGradient,
+            GradientDrawable.Orientation orientation_LinearGradient){
+        final float level = /*st.mUseLevel ? getLevel() / 10000.0f :*/ 1.0f;
+        final RectF r = new RectF(0,0,width,height);
+        final float x0, x1, y0, y1;
+        /* TL_BR */
+        if (orientation_LinearGradient == GradientDrawable.Orientation.TOP_BOTTOM) {
+            x0 = r.left;
+            y0 = r.top;
+            x1 = x0;
+            y1 = level * r.bottom;
+        } else if (orientation_LinearGradient == GradientDrawable.Orientation.TR_BL) {
+            x0 = r.right;
+            y0 = r.top;
+            x1 = level * r.left;
+            y1 = level * r.bottom;
+        } else if (orientation_LinearGradient == GradientDrawable.Orientation.RIGHT_LEFT) {
+            x0 = r.right;
+            y0 = r.top;
+            x1 = level * r.left;
+            y1 = y0;
+        } else if (orientation_LinearGradient == GradientDrawable.Orientation.BR_TL) {
+            x0 = r.right;
+            y0 = r.bottom;
+            x1 = level * r.left;
+            y1 = level * r.top;
+        } else if (orientation_LinearGradient == GradientDrawable.Orientation.BOTTOM_TOP) {
+            x0 = r.left;
+            y0 = r.bottom;
+            x1 = x0;
+            y1 = level * r.top;
+        } else if (orientation_LinearGradient == GradientDrawable.Orientation.BL_TR) {
+            x0 = r.left;
+            y0 = r.bottom;
+            x1 = level * r.right;
+            y1 = level * r.top;
+        } else if (orientation_LinearGradient == GradientDrawable.Orientation.LEFT_RIGHT) {
+            x0 = r.left;
+            y0 = r.top;
+            x1 = level * r.right;
+            y1 = y0;
+        } else {
+            x0 = r.left;
+            y0 = r.top;
+            x1 = level * r.right;
+            y1 = level * r.bottom;
+        }
+        LinearGradient hLinearGradient = new LinearGradient(x0,y0,x1,y1, color_LinearGradient, positions_LinearGradient, Shader.TileMode.CLAMP);
+        return hLinearGradient;
+    }
+
+    public static LinearGradient getShader(
+            int width, int height, int[] color_LinearGradient,
+            float[] positions_LinearGradient,
+            GradientDrawable.Orientation orientation_LinearGradient){
+
+        return newLinearGradient(width,height,color_LinearGradient,
+                positions_LinearGradient,orientation_LinearGradient);
+    }
+
+
+
+    ///============================================================
+
+    public static Bitmap newRotateBitmap(Bitmap bitmap,int angle){
+        // 旋转图片 动作
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angle);
+        // 创建新的图片
+        Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, 0, 0,
+                bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+        return resizedBitmap;
+    }
+
 }
