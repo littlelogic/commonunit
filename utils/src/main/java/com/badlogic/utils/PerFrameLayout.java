@@ -484,7 +484,9 @@ public class PerFrameLayout extends ViewGroup {
         int height_will_MeasureSpec = MeasureSpec.makeMeasureSpec(height_will, MeasureSpec.EXACTLY);
 
         child.measure(width_will_MeasureSpec, height_will_MeasureSpec);
-        child.setMeasuredDimension(width_will,height_will);
+        if (invokeSetMeasuredDimensionMark) {
+            invokeSetMeasuredDimension(child, width_will, height_will);
+        }
 
         /*ALog.i("","MFrameLayout-measurePer" + "\n"
                 + "-width_will->" + width_will
@@ -493,6 +495,19 @@ public class PerFrameLayout extends ViewGroup {
                 + "-heightModeWill->" + MeasureSpec.toString(height_will_MeasureSpec)
         );*/
         return true;
+    }
+
+    public boolean invokeSetMeasuredDimensionMark = false;
+
+    private void invokeSetMeasuredDimension(View child, int width, int height) {
+        try {
+            java.lang.reflect.Method method = View.class.getDeclaredMethod(
+                    "setMeasuredDimension", int.class, int.class);
+            method.setAccessible(true);
+            method.invoke(child, width, height);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private int layoutChildrenHorizontalPer(LayoutParams lp , int absoluteGravity,
