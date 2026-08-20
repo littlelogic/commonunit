@@ -76,7 +76,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
-import org.apache.commons.io.IOUtils;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
 import androidx.core.app.ActivityCompat;
@@ -2816,22 +2815,6 @@ public class Tools {
         return true;
     }
 
-    private static int calculateInSampleSize(BitmapFactory.Options options,
-                                             int reqWidth, int reqHeight) {
-        // 源图片的高度和宽度
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        int inSampleSize = 1;
-        if (height > reqHeight || width > reqWidth) {
-            // 计算出实际宽高和目标宽高的比率
-            final int heightRatio = Math.round((float) height / (float) reqHeight);
-            final int widthRatio = Math.round((float) width / (float) reqWidth);
-            // 选择宽和高中最小的比率作为inSampleSize的值，这样可以保证最终图片的宽和高
-            // 一定都会大于等于目标的宽和高。
-            inSampleSize = heightRatio < widthRatio ? heightRatio : widthRatio;
-        }
-        return inSampleSize;
-    }
 
     public static boolean saveBitmapAsPng(Bitmap bmp,int quality, File f) {
         /*try {
@@ -3261,18 +3244,18 @@ public class Tools {
     public static int readPictureDegree(String path) {
         int degree = 0;
         try {
-            final androidx.exifinterface.media.ExifInterface exifInterface = new androidx.exifinterface.media.ExifInterface(path);
+            final ExifInterface exifInterface = new ExifInterface(path);
             final int orientation =
-                    exifInterface.getAttributeInt(androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
-                            androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL);
+                    exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                            ExifInterface.ORIENTATION_NORMAL);
             switch (orientation) {
-                case androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_90:
+                case ExifInterface.ORIENTATION_ROTATE_90:
                     degree = 90;
                     break;
-                case androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_180:
+                case ExifInterface.ORIENTATION_ROTATE_180:
                     degree = 180;
                     break;
-                case androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_270:
+                case ExifInterface.ORIENTATION_ROTATE_270:
                     degree = 270;
                     break;
             }
@@ -3345,32 +3328,6 @@ public class Tools {
         ShapeDrawable shapeDrawable = new ShapeDrawable(rr);
         shapeDrawable.setShaderFactory(shaderFactory);
         return shapeDrawable;
-    }
-
-
-
-    public static void copyWithTimeout(String urlString, String outputPath, int timeout) throws Exception {
-        copyWithTimeout(urlString,new File(outputPath),timeout);
-    }
-
-    public static void copyWithTimeout(String urlString, File outputFile, int timeout) throws Exception {
-        URL url = new URL(urlString);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setConnectTimeout(timeout); // 设置连接超时时间
-        connection.setReadTimeout(timeout); // 设置读取超时时间
-        connection.connect();
-
-        FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
-        try (InputStream inputStream = connection.getInputStream()) {
-            IOUtils.copy(inputStream, fileOutputStream);
-        } finally {
-            connection.disconnect();
-        }
-    }
-
-    public static void loadFile(String urlString, String outputPath) throws Exception {
-        URL lURL = new URL(urlString);
-        IOUtils.copy(lURL, new File(outputPath));
     }
 
     public static boolean loadFile(String urlString, String outputFile, int timeout)  {
