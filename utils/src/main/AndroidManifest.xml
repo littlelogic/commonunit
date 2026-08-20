@@ -14,11 +14,7 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name" >
 
-        <!-- 注册服务 -->
-        <service
-            android:name="com.badlogic.socket.LogWebSocketService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync"/>
+
 
     </application>
 
