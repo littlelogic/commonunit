@@ -10,8 +10,6 @@ import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 
-import com.media.editor.util.Tools;
-
 public class DrawSeekBar extends androidx.appcompat.widget.AppCompatSeekBar {
 
     private boolean bothMode = false;
