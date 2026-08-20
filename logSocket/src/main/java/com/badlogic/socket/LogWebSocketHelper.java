@@ -1,7 +1,5 @@
 package com.badlogic.socket;
 
-
-/// com.badlogic.socket.LogWebSocketHelper
 import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -9,7 +7,6 @@ import android.os.Message;
 import android.util.Log;
 
 import com.badlogic.socket.NetworkUtils;
-import com.badlogic.utils.LogSocketIntf;
 import com.google.gson.Gson;
 
 import org.java_websocket.WebSocket;
@@ -30,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * WebSocket实时日志传输服务
  */
-public class LogWebSocketHelper extends HandlerThread implements LogSocketIntf {
+public class LogWebSocketHelper extends HandlerThread{
 
 
     private static final String TAG = "LogWebSocketService";

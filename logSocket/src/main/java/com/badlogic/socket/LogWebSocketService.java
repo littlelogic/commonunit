@@ -1,15 +1,17 @@
 package com.badlogic.socket;
 
-
-/// com.badlogic.socket.LogWebSocketHelper
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.Service;
 import android.content.Context;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Message;
+import android.content.Intent;
+import android.os.Build;
+import android.os.IBinder;
 import android.util.Log;
 
-import com.badlogic.socket.NetworkUtils;
-import com.badlogic.utils.LogSocketIntf;
+import androidx.core.app.NotificationCompat;
+
 import com.google.gson.Gson;
 
 import org.java_websocket.WebSocket;
@@ -30,8 +32,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * WebSocket实时日志传输服务
  */
-public class LogWebSocketHelper extends HandlerThread implements LogSocketIntf {
-
+public class LogWebSocketService extends Service {
 
     private static final String TAG = "LogWebSocketService";
     public static final int PORT_DEAFULT = 8127;
@@ -41,88 +42,33 @@ public class LogWebSocketHelper extends HandlerThread implements LogSocketIntf {
     private ScheduledExecutorService heartbeatExecutor;
     private String localIpAddress = "";
 
-    private volatile Handler handler = null;
-    private volatile Context appContext;
 
-    @Override
-    protected void onLooperPrepared() {
-        super.onLooperPrepared();
-
-        handler = new Handler(getLooper()){
-            @Override
-            public void handleMessage(Message msg) {
-                super.handleMessage(msg);
-                dealMessage(msg);
-            }
-        };
-
-        {
-            Message message = Message.obtain();
-            message.what = StartWebSocketServer;
-            message.obj = PORT;
-            handler.sendMessage(message);
-            String ip = NetworkUtils.getLocalIpAddress(appContext);
-            String text = "服务器运行中\nIP: " + ip + ":"+ LogWebSocketHelper.PORT+"\n" +
-                    "在电脑浏览器访问: http://" + ip + ":"+ LogWebSocketHelper.PORT;
-            Log.i(TAG,text);
-        }
-
-    }
-
-
-    //==========================================
-
-    private static class SingletonHolder{
-        private static LogWebSocketHelper instance = new LogWebSocketHelper();
-    }
-
-    private LogWebSocketHelper(){
-        super("LogWebSocketHelper");
-    }
-    public static LogWebSocketHelper getInstance(){
-        return SingletonHolder.instance;
-    }
-
-    //===========================================================
-
-    public void launch(Context context){
+    public static void launch(Context context){
         launch(context,PORT_DEAFULT);
     }
 
-    public void launch(Context context,int port_out){
-        appContext = context.getApplicationContext();
-        // 获取本机IP地址
+    public static void launch(Context context,int port_out){
+        Intent serviceIntent = new Intent(context, LogWebSocketService.class);
         PORT = port_out;
-        start();
-    }
-
-    //===========================================================
-
-    private void dealMessage(Message msg) {
-        if (msg.what == StartWebSocketServer) {
-
-            int port_out = (int)msg.obj;
-            // 获取本机IP地址
-            localIpAddress = NetworkUtils.getLocalIpAddress(appContext);
-            PORT = port_out;
-            // 启动WebSocket服务器
-            startWebSocketServer();
-            // 启动心跳检测
-            startHeartbeat();
-            Log.i(TAG, "WebSocket服务已启动，IP: " + localIpAddress + ":" + PORT);
-        } else if (msg.what == SEND_LOG) {
-            String log = (String)msg.obj;
-            if (webSocketServer != null && log != null) {
-                webSocketServer.broadcastLog(log);
-            }
-        } else if (msg.what == SEND_STRUCTURED_LOG) {
-            String logJson = (String)msg.obj;
-            if (webSocketServer != null && logJson != null) {
-                webSocketServer.broadcastJson(logJson);
-            }
+        serviceIntent.setAction("startWebSocketServer");
+        serviceIntent.putExtra("Key_Port", port_out);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(serviceIntent);
+        } else {
+            context.startService(serviceIntent);
         }
+        String ip = NetworkUtils.getLocalIpAddress(context);
+        String text = "服务器运行中\nIP: " + ip + ":"+LogWebSocketService.PORT+"\n" +
+                "在电脑浏览器访问: http://" + ip + ":"+LogWebSocketService.PORT;
+        Log.i(TAG,text);
     }
 
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Log.i(TAG, "WebSocket服务启动中...");
+    }
 
     private void startWebSocketServer() {
         try {
@@ -143,82 +89,79 @@ public class LogWebSocketHelper extends HandlerThread implements LogSocketIntf {
         }, 10, 10, TimeUnit.SECONDS);
     }
 
-    public static final int StartWebSocketServer = 1;
-    public static final String Key_Port = "Key_Port";
-    public static final int SEND_LOG = 2;
-    public static final String SEND_LOG_MSG = "log";
-    public static final int SEND_STRUCTURED_LOG = 3;
-    public static final String SEND_STRUCTURED_LOG_MSG = "log_entry";
-
     /**
      * 发送日志到所有连接的客户端
      */
-    public void sendLog( String logMessage) {
-        Message message = Message.obtain();
-        message.what = SEND_LOG;
-        message.obj = logMessage;
-        if (handler != null) {
-            handler.sendMessage(message);
-        }
+    public static void sendLog(Context context, String logMessage) {
+        Intent intent = new Intent(context, LogWebSocketService.class);
+        intent.setAction("SEND_LOG");
+        intent.putExtra("log", logMessage);
+        context.startService(intent);
     }
 
     /**
      * 发送结构化日志
      */
-
-//    /**
-//     *  ['INFO', 'WARN', 'ERROR', 'DEBUG']
-//
-//     */
-    public void sendStructuredLog(String level, String tag, String message) {
-        sendStructuredLog(new LogEntry(level,tag,message));
+    public static void sendStructuredLog(Context context, LogEntry logEntry) {
+        Intent intent = new Intent(context, LogWebSocketService.class);
+        intent.setAction("SEND_STRUCTURED_LOG");
+        intent.putExtra("log_entry", logEntry.toJson());
+        context.startService(intent);
     }
 
-    public void sendInfoLog(String tag, String message) {
-        sendStructuredLog(new LogEntry("INFO",tag,message));
-    }
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null) {
+            String action = intent.getAction();
+            if ("startWebSocketServer".equals(action)) {
+                // 获取本机IP地址
+                localIpAddress = NetworkUtils.getLocalIpAddress(this);
+                String log = intent.getStringExtra("Key_Port");
+                PORT = intent.getIntExtra("Key_Port", PORT_DEAFULT);
+                // 启动WebSocket服务器
+                startWebSocketServer();
+                // 启动心跳检测
+                startHeartbeat();
 
-    public void sendDebugLog(String tag, String message) {
-        sendStructuredLog(new LogEntry("DEBUG",tag,message));
-    }
-
-    public void sendWarnLog(String tag, String message) {
-        sendStructuredLog(new LogEntry("WARN",tag,message));
-    }
-
-    public void sendErrorLog(String tag, String message) {
-        sendStructuredLog(new LogEntry("ERROR",tag,message));
-    }
-
-
-    public void sendStructuredLog(LogEntry logEntry) {
-        Message message = Message.obtain();
-        message.what = SEND_LOG;
-        message.obj = logEntry;
-        if (handler != null) {
-            handler.sendMessage(message);
+                Log.i(TAG, "WebSocket服务已启动，IP: " + localIpAddress + ":" + PORT);
+                showNotification("日志服务已启动", "连接地址: " + localIpAddress + ":" + PORT);
+            } else if ("SEND_LOG".equals(action)) {
+                String log = intent.getStringExtra("log");
+                if (webSocketServer != null && log != null) {
+                    webSocketServer.broadcastLog(log);
+                }
+            } else if ("SEND_STRUCTURED_LOG".equals(action)) {
+                String logJson = intent.getStringExtra("log_entry");
+                if (webSocketServer != null && logJson != null) {
+                    webSocketServer.broadcastJson(logJson);
+                }
+            }
         }
+        return START_STICKY;
     }
 
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @Override
     public void onDestroy() {
         Log.i(TAG, "WebSocket服务停止");
 
-        try {
-            if (webSocketServer != null) {
-                try {
-                    webSocketServer.stop(1000);
-                } catch (Exception e) {
-                    Log.e(TAG, "停止WebSocket服务器失败", e);
-                }
+        if (webSocketServer != null) {
+            try {
+                webSocketServer.stop(1000);
+            } catch (Exception e) {
+                Log.e(TAG, "停止WebSocket服务器失败", e);
             }
-
-            if (heartbeatExecutor != null) {
-                heartbeatExecutor.shutdown();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
+        if (heartbeatExecutor != null) {
+            heartbeatExecutor.shutdown();
+        }
+
+        super.onDestroy();
     }
 
     /**
@@ -437,9 +380,6 @@ public class LogWebSocketHelper extends HandlerThread implements LogSocketIntf {
         private long timestamp;
         private String thread;
 
-        /*
-        ['INFO', 'WARN', 'ERROR', 'DEBUG']
-         */
         public LogEntry(String level, String tag, String message) {
             this.level = level;
             this.tag = tag;
@@ -457,6 +397,42 @@ public class LogWebSocketHelper extends HandlerThread implements LogSocketIntf {
             map.put("thread", thread);
             return new Gson().toJson(map);
         }
+    }
+
+    private void showNotification(String title, String message) {
+        // 创建前台服务通知（如果需要）
+        // 1. 创建通知渠道（Android 8.0+ 必需）
+        createNotificationChannel();
+        // 2. 尽早启动前台服务
+        startForegroundServiceWithNotification();
+    }
+
+    private int NOTIFICATION_ID = 1; // 通知ID，必须唯一且不为0
+    private String CHANNEL_ID = "log_websocket_channel"; // 通知渠道ID
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String channelName = "日志同步服务";
+            int importance = NotificationManager.IMPORTANCE_LOW; // 或 DEFAULT，根据需求
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, channelName, importance);
+            channel.setDescription("用于保持WebSocket连接同步日志");
+
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private void  startForegroundServiceWithNotification() {
+        // 构建一个符合前台服务要求的通知
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
+        Notification notification = builder.setContentTitle("日志同步服务运行中")
+                .setContentText("正在与电脑同步日志...")
+                .setSmallIcon(android.R.drawable.ic_dialog_info) // 必须设置一个有效的小图标
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build();
+
+        // 关键：启动前台服务，并绑定通知
+        startForeground(NOTIFICATION_ID, notification);
     }
 
 }

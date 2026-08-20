@@ -6,11 +6,14 @@ import android.util.Log;
 import com.badlogic.socket.LogWebSocketHelper;
 import com.badlogic.socket.LogWebSocketService;
 
+import java.lang.reflect.InvocationTargetException;
+
 public class ALog {
 
 	public static boolean mark = false;
 	public static boolean i = false;
 	public static boolean l = false;
+	public static Boolean d = null;
 
 	public static final String _b = "";
 	public static boolean _i = true;
@@ -26,13 +29,30 @@ public class ALog {
 	public static final String Tag6 = "wjw06";
 	public static final String Error = "error";
 
+
 	///--------------------
+
+	private static LogSocketIntf logSocketIntf;
 
 	public static void setMark(boolean mark_){
 		mark = mark_;
 		_i = _1 = _$ = _￥ = mark;
+		if (mark_) {
+			d = true;
+		} else {
+			d = null;
+		}
 
-	}
+        try {
+            Class<?> clazz = Class.forName("com.badlogic.socket.LogWebSocketHelper");
+            Object instance = clazz.getDeclaredConstructor().newInstance();
+			logSocketIntf = (LogSocketIntf) instance;
+        } catch (Exception e) {
+			e.printStackTrace();
+        }
+
+    }
+
 
 
 	private static Context appContext;
@@ -41,24 +61,32 @@ public class ALog {
 	public static void setLogWebSocket(Context context){
 		logWebSocketMark = true;
 		appContext = context.getApplicationContext();
-		LogWebSocketHelper.getInstance().launch(context);
+		if (logSocketIntf != null) {
+			logSocketIntf.launch(context);
+		}
 	}
 
 	public static void setLogWebSocket(Context context, int port_out){
 		logWebSocketMark = true;
 		appContext = context.getApplicationContext();
-		LogWebSocketHelper.getInstance().launch(context,port_out);
+		if (logSocketIntf != null) {
+			logSocketIntf.launch(context,port_out);
+		}
 	}
 
 	private static void sendLogToWebSocket(String text){
 		if (logWebSocketMark && appContext != null) {
-			LogWebSocketHelper.getInstance().sendLog(text);
+			if (logSocketIntf != null) {
+				logSocketIntf.sendLog(text);
+			}
 		}
 	}
 
 	private static void sendLogToWebSocket(String level, String tag, String message){
 		if (logWebSocketMark && appContext != null) {
-			LogWebSocketHelper.getInstance().sendStructuredLog(level,tag,message);
+			if (logSocketIntf != null) {
+				logSocketIntf.sendStructuredLog(level,tag,message);
+			}
 		}
 	}
 
