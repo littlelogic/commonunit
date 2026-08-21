@@ -8,8 +8,8 @@ public class ALog {
 	public static boolean mark = false;
 	public static boolean i = false;
 	public static boolean l = false;
-	public static Boolean d = null;
-	public static Boolean r = null;
+	public static String d = null;
+	public static String r = null;
 
 	public static final String _b = "";
 	public static boolean _i = true;
@@ -32,13 +32,13 @@ public class ALog {
 
 	public static void setMark(boolean mark_){
 		mark = mark_;
-		_i = _1 = _$ = _￥ = mark;
+		l = i = _i = _1 = _$ = _￥ = mark;
 		if (mark_) {
-			d = true;
+			d = "";
 			r = null;
 		} else {
 			d = null;
-			r = true;
+			r = "";
 		}
 
         try {
